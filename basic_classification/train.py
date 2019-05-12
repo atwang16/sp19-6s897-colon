@@ -40,8 +40,8 @@ parser.add_argument('--load_model', type=str, default=None, help='Name of a mode
 print('\n=== Setting up Parameters ===\n')
 
 args = parser.parse_args()
-opts.train_path = '/'.join([opts.base_path, opts.train_path])
-opts.valid_path = '/'.join([opts.base_path, opts.valid_path])
+args.train_path = '/'.join([args.base_path, args.train_path])
+args.valid_path = '/'.join([args.base_path, args.valid_path])
 
 # config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 56} )
 # sess = tf.Session(config=config)
