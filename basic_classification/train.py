@@ -12,11 +12,14 @@ import argparse
 
 import numpy as np
 
+# to run on gcp, use: CUDA_VISIBLE_DEVICES=0 ./docker_run.sh python3 /basic_classification/train.py (then arguments)
+
 # Loading arguments
 parser = argparse.ArgumentParser(description='Polyp Detecting Model')
 
 # evaluation
 parser.add_argument('--only_test', type=bool, default=False, help='Flag such that, if true, the model will only be evaluated on the dataset passed in split by train_percent, validation_percent, etc')
+parser.add_argument('--base_path', default="/basic_classification")
 
 # data location
 parser.add_argument('--train_path', type=str, default='data/kvasir_train_test_split/train', help='folder that contains all train images')
@@ -37,6 +40,8 @@ parser.add_argument('--load_model', type=str, default=None, help='Name of a mode
 print('\n=== Setting up Parameters ===\n')
 
 args = parser.parse_args()
+opts.train_path = '/'.join([opts.base_path, opts.train_path])
+opts.valid_path = '/'.join([opts.base_path, opts.valid_path])
 
 # config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 56} )
 # sess = tf.Session(config=config)
