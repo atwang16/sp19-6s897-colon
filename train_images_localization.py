@@ -102,7 +102,8 @@ if __name__ == '__main__':
 
     # Prepare callbacks for model saving and for learning rate adjustment.
     logging = TensorBoard(log_dir=args.output_dir)
-    checkpoint = ModelCheckpoint(filepath=args.output_dir,
+    checkpoint_name = '%s_model.{epoch:03d}.h5' % args.type
+    checkpoint = ModelCheckpoint(filepath=os.path.join(args.output_dir, checkpoint_name),
                                  monitor='val_loss',
                                  verbose=1,
                                  save_best_only=True,
