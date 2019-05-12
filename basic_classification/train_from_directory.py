@@ -9,6 +9,7 @@ import os,datetime
 from os.path import join
 import pickle
 import numpy as np
+from matplotlib import pyplot
 
 
 PATH = os.path.dirname(__file__)
@@ -16,10 +17,12 @@ SAVINGS_DIR = join(PATH,'../../savings')
 
 
 def preprocessing_func(X):
+    # new_X = (X - np.mean(X)) / np.std(X)
+    # print(np.mean(X), np.std(X), np.max(X), np.min(X), np.mean(new_X), np.std(new_X), np.max(new_X), np.min(new_X))
     return (X - np.mean(X)) / np.std(X)
 
 def train_model_from_dir(
-    train_path, valid_path, model, model_name='model', target_size=(224, 224), batch_size=64, epochs=30, 
+    train_path, valid_path, model, model_name='model', target_size=(224, 224), batch_size=16, epochs=30, 
     preprocessing_function=preprocessing_func, params=None
     ):
 
@@ -32,27 +35,30 @@ def train_model_from_dir(
     while os.path.exists(join(SAVINGS_DIR, model_name_temp)):
         model_name_temp=model_name+'('+str(i)+')'
         i+=1
-    MODEL_DIR = join(SAVINGS_DIR,model_name_temp)
+    MODEL_DIR = join(SAVINGS_DIR, model_name_temp)
     os.makedirs(MODEL_DIR)
 
 
     _presaving(model, MODEL_DIR, params)
 
     train_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
-    train_generator = train_datagen.flow_from_directory(train_path, target_size=target_size, batch_size=batch_size, class_mode='binary')         
+    train_generator = train_datagen.flow_from_directory(train_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True)         
     valid_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
-    validation_generator = train_datagen.flow_from_directory(valid_path, target_size=target_size, batch_size=batch_size, class_mode='binary')
-
+    validation_generator = train_datagen.flow_from_directory(valid_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True)
+    print(next(train_generator))
     tensorboard = TensorBoard(log_dir=MODEL_DIR, histogram_freq=0, write_graph=True, write_images=True)
     checkpoint = ModelCheckpoint(join(MODEL_DIR,'model.h5'), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     
     history = model.fit_generator(
         train_generator, 
         steps_per_epoch=train_generator.samples//batch_size, 
-        validation_data=validation_generator, 
+        validation_data=validation_generator,
         validation_steps=validation_generator.samples//batch_size, 
         epochs=epochs, 
         callbacks=[tensorboard, checkpoint])
+
+    pyplot.plot(history.history['acc'])
+    pyplot.show()
 
     _postsaving(model, history, MODEL_DIR)
 

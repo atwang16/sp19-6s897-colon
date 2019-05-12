@@ -26,7 +26,7 @@ parser.add_argument('--valid_path', type=str, default='data/kvasir_train_test_sp
 parser.add_argument('--validation_split', type=float, default=0.2, help='Percent of data to use for validation (rest will be used for training)')
 
 # Model Hyper parameters
-parser.add_argument('--num_epochs', type=int, default=100, help='Number of epochs to train the model')
+parser.add_argument('--num_epochs', type=int, default=200, help='Number of epochs to train the model')
 parser.add_argument('--lr', type=float, default=0.001, help='Learning rate to train the model')
 parser.add_argument('--loss', type=str, default='sparse_categorical_crossentropy', help='Loss function to train the model with (binary_crossentropy | categorical_crossentropy)')
 
@@ -56,7 +56,7 @@ print('\n=== Compiling Model ===\n')
 adam = optimizers.Adam(lr=args.lr)
 
 # we expect to only separate between two different classes : polyp or not polyp
-model.compile(optimizer=adam, loss=args.loss, metrics=['binary_accuracy', 'categorical_accuracy'])
+model.compile(optimizer=adam, loss=args.loss, metrics=['accuracy', 'binary_accuracy'])
 
 
 print('\n=== Training Model ===\n')
