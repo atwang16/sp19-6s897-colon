@@ -1,0 +1,6 @@
+models/pretrained_weights
+tools/
+__pycache__/
+tests/
+.DS_Store
+.idea/
