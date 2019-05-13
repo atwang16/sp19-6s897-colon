@@ -87,7 +87,7 @@ training_generator = data.Generator_Dataset_Rotated(args.patch_size, args.traini
 print('\n=== Initiating Model ===\n')
 
 if args.load_model is not None:
-    model = load_model(args.load_model)
+    model = load_model(args.load_model, custom_objects={'auc_metric': auc_metric})
 else:
     if args.type == 'vgg19':
         model = vgg19.vgg(training_generator.input_shape, args.num_classes)
