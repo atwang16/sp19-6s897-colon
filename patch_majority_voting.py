@@ -13,6 +13,8 @@ import os
 from keras import backend as K
 
 
+#python3 patch_majority_voting.py --images data/segmentation/test/polyps/ --ground_truth data/segmentation/test/segmentations/ --load_model PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/
+
 parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
 # data location
 parser.add_argument('--images', type=str, default='ETIS-LaribPolypDB/ETIS-LaribPolypDB/', help='folder that contains all images that the model will be trained on')
@@ -52,17 +54,29 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
         img_patches, img_labels = dataset.image_to_sequential_patches(original_name, ground_truth_name)
 
-        print('Num Patches = ',len(img_patches))
+        batch_size = 100
+        false_positive_patches = 0
+        false_negative_patches = 0
 
-        predictions = model.predict(np.array(img_patches))
+        pos_predictions = 0
+        for i in range(0,len(img_patches),batch_size):
+            batch_img_patches = np.array(img_patches[i:i+batch_size])
+            batch_img_labels = np.array(img_labels[i:i+batch_size])
 
-        false_positive_patches = np.sum(img_labels[:,1] - predictions[:,1] < 0)/len(img_labels)
-        false_negative_patches = np.sum(img_labels[:,1] - predictions[:,1] > 0)/len(img_labels)
+            predictions = model.predict(np.array(batch_img_patches))
+
+            false_positive_patches = np.sum(batch_img_labels[:,1] - predictions[:,1] < 0)
+            false_negative_patches = np.sum(batch_img_labels[:,1] - predictions[:,1] > 0)
+
+            pos_predictions += np.sum(predictions)
+
+        false_negative_patches = false_negative_patches/len(img_patches)
+        false_positive_patches = false_positive_patches/len(img_patches)
 
         avg_fp = (avg_fp*i + false_positive_patches)/(i+1)
         avg_fn = (avg_fn*i + false_negative_patches)/(i+1)
 
-        percent_polyp = np.sum(predictions)/len(predictions)
+        percent_polyp = pos_predictions/len(predictions)
         if percent_polyp > threshold:
             img_label = 1
         else:
