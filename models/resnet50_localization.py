@@ -45,7 +45,7 @@ def resnet_layer(inputs, num_filters, num_blocks, strides=1):
     return x
 
 
-def resnet(input_shape, layers):
+def resnet(input_shape, layers, pretrained_weights=None, use_sigmoid=False):
     num_filters = 64
 
     inputs = Input(shape=input_shape)
@@ -65,14 +65,20 @@ def resnet(input_shape, layers):
     y = Dense(1024, kernel_initializer="he_normal")(y)
     y = BatchNormalization()(y)
     y = Activation("relu")(y)
-    outputs = Dense(4,
-                    activation="linear",
-                    kernel_initializer="he_normal")(y)
+    if use_sigmoid:
+        assert input_shape[0] == input_shape[1], "Currently only support equal width and height"
+        outputs = Dense(4, activation="sigmoid")(x)
+        outputs = keras.layers.Lambda(lambda x: x * input_shape[0])(outputs)
+    else:
+        outputs = Dense(4, activation="linear", kernel_initializer="he_normal")(y)
 
     # Instantiate model.
     model = Model(inputs=inputs, outputs=outputs)
 
+    if pretrained_weights is not None:
+        model.load_weights(pretrained_weights)
+
     return model
 
-def resnet50(input_shape):
-    return resnet(input_shape, [3, 4, 6, 3])
+def resnet50(input_shape, pretrained_weights=None, use_sigmoid=False):
+    return resnet(input_shape, [3, 4, 6, 3], pretrained_weights=pretrained_weights, use_sigmoid=use_sigmoid)

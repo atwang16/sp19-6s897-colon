@@ -31,10 +31,10 @@ def get_localization_format(typ):
 
 def get_model(typ, input_shape, pretrained_weights):
     if typ == 'vgg19':
-        model = vgg.vgg19(input_shape, use_sigmoid=True)
+        model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
-        model = resnet.resnet50(input_shape)
+        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights)
         loss = "mean_squared_error"
     elif typ == "yolov3":
         model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)

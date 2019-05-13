@@ -11,6 +11,10 @@ import models.resnet50_localization as resnet
 import models.yolov3 as yolo
 import numpy as np
 from keras import optimizers
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import os
+import cv2
 
 IMAGES_DIR = "data/segmentation"
 
@@ -26,10 +30,10 @@ def get_localization_format(typ):
 
 def get_model(typ, input_shape, pretrained_weights):
     if typ == 'vgg19':
-        model = vgg.vgg19(input_shape, use_sigmoid=True)
+        model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
-        model = resnet.resnet50(input_shape)
+        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights)
         loss = "mean_squared_error"
     elif typ == "yolov3":
         model = yolo.YOLO(model_image_size=input_shape, model_path=pretrained_weights)
@@ -102,12 +106,50 @@ def evaluate(model, dataset, split, typ):
         y_pred = model.predict(X)
     assert y.shape == y_pred.shape
 
+    print(y)
+    print(y_pred)
+
     score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
     return y_pred, score
 
 
-def visualize(dataset, split, predictions, num_to_generate=None):
-    pass
+def visualize(save_dir, dataset, predictions, num_to_generate=None):
+    def get_bounding_box(box, color):
+        x_min, y_min, x_max, y_max = box
+        return patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min, linewidth=1, edgecolor=color,
+                                 facecolor='none')
+
+    def get_bounding_box_center(box, color):
+        x_center, y_center, width, height = box
+        return patches.Rectangle((x_center - width / 2, y_center - height / 2), width, height, linewidth=1, edgecolor=color, facecolor='none')
+
+    X = dataset.__getattribute__("X_test_orig")
+    y = dataset.__getattribute__("y_test")
+    gbb = get_bounding_box if dataset.format == LocFormat.BOX else get_bounding_box_center
+
+    if num_to_generate is not None:
+        X = X[:num_to_generate]
+        y = y[:num_to_generate, ...]
+
+    for i in range(len(X)):
+        img = X[i]
+        print(img)
+
+        # Create figure and axes
+        fig, ax = plt.subplots(1)
+
+        # Display the image
+        ax.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+        # Create a Rectangle patch
+        true_box = gbb(y[i, ...], color="r")
+        pred_box = gbb(predictions[i, ...], color="b")
+
+        # Add the patch to the Axes
+        ax.add_patch(true_box)
+        ax.add_patch(pred_box)
+        plt.axis('off')
+        fig.savefig(os.path.join(save_dir, f"test_polyp_{i}.png"), bbox_inches=0)
 
 
 if __name__ == '__main__':
@@ -118,6 +160,7 @@ if __name__ == '__main__':
     parser.add_argument('--type', type=str, default='vgg19',
                         help='Determines which convolutional model to use. Valid options are {vgg19|resnet50|pvgg19}')
     parser.add_argument('--load_model', type=str, help='Name of a model that will be loaded', required=True)
+    parser.add_argument('--save_dir', type=str, help='Directory in which to save visualizations', required=True)
     parser.add_argument('--visualize', type=int, help='Number of images to visualize', default=None)
 
     print(f"keras version: {keras.__version__}")
@@ -132,6 +175,9 @@ if __name__ == '__main__':
     print('\n=== Setting up Parameters ===\n')
 
     args = parser.parse_args()
+
+    if not os.path.exists(args.save_dir):
+        os.makedirs(args.save_dir)
 
     print('\n=== Setting Up Data ===\n')
 
@@ -161,4 +207,4 @@ if __name__ == '__main__':
     print(f"Test dice score = {test_dice_score}")
 
     print("\n=== Visualizing Model ===\n")
-    visualize(dataset, "test", test_predictions, num_to_generate=args.visualize)
+    visualize(args.save_dir, dataset, test_predictions, num_to_generate=args.visualize)
