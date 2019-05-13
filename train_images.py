@@ -90,7 +90,7 @@ for i in np.arange(len(dataset.patches)):
     if i in training_idcs:
         train_patches.append(dataset.patches[i])
         train_labels.append(dataset.labels[i])
-        print(dataset.labels[i][1])
+        # print(dataset.labels[i][1])
         if dataset.labels[i][1] == 1:
             num_pos += 1
     else:
