@@ -866,8 +866,8 @@ class Dataset_Rotated:
 
         for i in range(len(ground_truth_files)):
             print(i)
-            ground_truth_name = self.ground_truth_location + ground_truth_files[i]
-            original_name = self.original_image_location + original_image_files[i]
+            ground_truth_name = self.ground_truth_location+'/' + ground_truth_files[i]
+            original_name = self.original_image_location +'/' + original_image_files[i]
             import pdb; pdb.set_trace()
             if random:
                 current_patches, current_labels = self.image_to_random_patches(original_name, ground_truth_name, num_patches, new_shape)
