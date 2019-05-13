@@ -20,7 +20,7 @@ args = parser.parse_args()
 
 dataset = data.Generator_Dataset_Rotated(args.patch_size, args.images, args.ground_truth, batch_size=args.batch_size)
 
-model = load_model(args.load_model)
+model = load_model(args.load_model, custom_objects={'auc_metric': auc_metric})
 
 ground_truth_files = os.listdir(args.ground_truth)
 original_image_files = os.listdir(args.images)
