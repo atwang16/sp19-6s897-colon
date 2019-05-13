@@ -83,12 +83,11 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
             img_label = 0
         # print(i, img_label, 'F+',false_positive_patches, 'F-',false_negative_patches)
         predicted_labels.append(img_label)
-        
+
     print('Threshold',threshold)
 
     print('Full Image False Negative Rate', (len(predicted_labels) - np.sum(predicted_labels))/len(predicted_labels))
 
     print('Full Dataset F+',avg_fp)
     print('Full Dataset F-',avg_fn)
-    import pdb; pdb.set_trace()
     # print('AUC',skm.roc_auc_score(np.ones(len(predicted_labels)),predicted_labels))
