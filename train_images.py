@@ -77,16 +77,31 @@ if args.resize_imgs:
 else:
     dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches,new_shape=None)
 # (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
+train_patches = []
+train_labels = []
+valid_patches = []
+valid_labels = []
 
-train_patches = dataset.patches[:int(args.train_percent*len(dataset.patches))]
-train_labels = dataset.labels[:int(args.train_percent*len(dataset.patches))]
+training_idcs = set(np.random.choice(np.arange(len(dataset.patches)),int(args.train_percent*len(dataset.patches)),replace=False))
 
-valid_patches = dataset.patches[int(args.train_percent*len(dataset.patches)):]
-valid_labels = dataset.labels[int(args.train_percent*len(dataset.patches)):]
 
-import pdb; pdb.set_trace()
+num_pos = 0
+for i in np.arange(len(dataset.patches)):
+    if i in training_idcs:
+        train_patches.append(dataset.patches[i])
+        train_labels.append(dataset.labels[i])
+        print(dataset.labels[i][1])
+        if dataset.labels[i][1] == 1:
+            num_pos += 1
+    else:
+        valid_patches.append(dataset.patches[i])
+        valid_labels.append(dataset.labels[i])
 
-print('Positive Percent ::',sum(train_labels[:,1])/len(train_labels))
+# import pdb; pdb.set_trace()
+print('POS PERCENT ', num_pos/len(train_patches))
+# REMOVE ONLY FOR TESTING
+# valid_patches = valid_patches[0:100]
+# valid_labels = valid_labels[0:100]
 
 print('\n=== Initiating Model ===\n')
 
@@ -110,6 +125,11 @@ adam = optimizers.Adam(lr=args.lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay
 # we expect to only separate between two different classes : polyp or not polyp
 model.compile(optimizer=adam, loss=args.loss, metrics=['binary_accuracy','categorical_accuracy',auc_metric])
 
+# python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches Fal
+# se --lr 0.001 --output_dir PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/ --type pvgg19 --model_name model --loss categorical_crossentropy -
+# -training_images /home/austin_t_wang/sp19-6s897-colon/data/segmentation/train/polyps/ --ground_truth /home/austin_t_wang/sp19-6s897-colon/d
+# ata/segmentation/train/segmentations
+
 early_stop = True
 try:
     if not args.only_test:
@@ -117,7 +137,7 @@ try:
         # training the model
         if len(valid_patches) > 0:
             print('With validation')
-            history = model.fit(train_patches, train_labels, validation_data=(valid_patches, valid_labels), epochs=args.num_epochs)
+            history = model.fit(np.array(train_patches), np.array(train_labels), validation_data=(np.array(valid_patches), np.array(valid_labels)), epochs=args.num_epochs, batch_size=100)
         else:
             print('Without validation')
             history = model.fit(train_patches, train_labels, epochs=args.num_epochs)
