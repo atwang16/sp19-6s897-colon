@@ -33,7 +33,6 @@ ground_truth_files = sorted(ground_truth_files)
 original_image_files = sorted(original_image_files)
 
 for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
-    print('Threshold',threshold)
     predicted_labels = []
     for i in range(len(ground_truth_files)):
         print(i)
@@ -52,7 +51,8 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
             img_label = 0
 
         predicted_labels.append(img_label)
-
+    print('Threshold',threshold)
+    
     print('Full Image False Negative Rate', (len(predicted_labels) - np.sum(predicted_labels))/len(predicted_labels))
 
     print('AUC',skm.auc(np.ones(len(ground_truth_files)),predicted_labels))
