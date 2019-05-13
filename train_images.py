@@ -81,7 +81,7 @@ train_patches = []
 train_labels = []
 valid_patches = []
 valid_labels = []
-
+import pdb; pdb.set_trace()
 training_idcs = set(np.random.choice(np.arange(len(dataset.patches)),int(args.train_percent*len(dataset.patches)),replace=False))
 
 
@@ -137,6 +137,7 @@ try:
         # training the model
         if len(valid_patches) > 0:
             print('With validation')
+            import pdb; pdb.set_trace()
             history = model.fit(np.array(train_patches), np.array(train_labels), validation_data=(np.array(valid_patches), np.array(valid_labels)), epochs=args.num_epochs, batch_size=100)
         else:
             print('Without validation')
