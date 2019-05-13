@@ -109,9 +109,9 @@ if __name__ == '__main__':
                                  save_best_only=True,
                                  mode='min')
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
-    early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
+    # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
 
-    callbacks = [logging, checkpoint, reduce_lr, early_stopping]
+    callbacks = [logging, checkpoint, reduce_lr]
 
     # optimizer
     adam = optimizers.Adam(lr=args.lr)  # beta_1=0.9, beta_2=0.999, decay=0.0
