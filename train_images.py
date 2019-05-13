@@ -1,6 +1,7 @@
 # python3 train_images.py --num_epochs 50 --train_percent .70 --random_patches False --lr 0.001 --output_dir balanced_medium_normed/ --type pvgg19 --model_name model
 
 
+ # python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches False --lr 0.001 --output_dir PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/ --type pvgg19 --model_name model --loss categorical_crossentropy --training_images /home/austin_t_wang/sp19-6s897-colon/data/segmentation/train/polyps/ --ground_truth /home/austin_t_wang/sp19-6s897-colon/data/segmentation/train/segmentations
 from keras import backend as K
 
 # importing model file
@@ -63,7 +64,7 @@ if not os.path.exists(args.output_dir):
 print("VERIFY USING GPU")
 # sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 gpu_devices = K.tensorflow_backend._get_available_gpus()
-print(f"GPU devices: {gpu_devices}")
+print("GPU devices: ",gpu_devices)
 print("----------------")
 # config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 56} )
 # sess = tf.Session(config=config)
