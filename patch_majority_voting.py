@@ -23,8 +23,8 @@ original_image_files = os.listdir(args.images)
 ground_truth_files = sorted(ground_truth_files)
 original_image_files = sorted(original_image_files)
 
-for threshold in range(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9)
-predicted_labels = []
+for threshold in range(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9):
+    predicted_labels = []
     for i in range(len(ground_truth_files)):
         ground_truth_name = self.ground_truth_location+'/' + ground_truth_files[i]
         original_name = self.original_image_location +'/' + original_image_files[i]
