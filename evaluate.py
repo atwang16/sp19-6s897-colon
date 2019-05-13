@@ -104,9 +104,10 @@ def evaluate(model, dataset, split, typ):
         y_pred = model.evaluate_on_image(X)
     else:
         y_pred = model.predict(X)
-    assert y.shape == y_pred.shape
+    # assert y.shape == y_pred.shape
 
-    score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
+    # score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
+    score = 0
     return y_pred, score
 
 
@@ -124,7 +125,7 @@ def visualize(save_dir, dataset, predictions, num_to_generate=None):
     y = dataset.__getattribute__("y_test")
     gbb = get_bounding_box if dataset.format == LocFormat.BOX else get_bounding_box_center
 
-    if num_to_generate is not None:
+    if num_to_generate is not None and num_to_generate > len(X):
         X = X[:num_to_generate]
         y = y[:num_to_generate, ...]
 
@@ -139,13 +140,16 @@ def visualize(save_dir, dataset, predictions, num_to_generate=None):
 
         # Create a Rectangle patch
         true_box = gbb(y[i, ...], color="r")
-        pred_box = gbb(predictions[i, ...], color="b")
+        print(predictions[i])
+        for j in range(len(predictions[i])):
+            pred_box = gbb(predictions[i][j], color="b")
 
         # Add the patch to the Axes
         ax.add_patch(true_box)
         ax.add_patch(pred_box)
         plt.axis('off')
         fig.savefig(os.path.join(save_dir, f"test_polyp_{i}.png"), bbox_inches=0)
+        plt.close(fig)
 
 
 if __name__ == '__main__':

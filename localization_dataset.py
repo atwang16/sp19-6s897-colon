@@ -275,4 +275,4 @@ class YoloDataset(Dataset):
 
         x_min, y_min, x_max, y_max = self.get_bounds(rescaled_segmentation)
 
-        return np.array([x_min, y_min, x_max, y_max, 0])
+        return np.array([y_min, x_min, y_max, x_max, 0])
