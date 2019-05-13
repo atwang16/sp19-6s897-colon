@@ -148,7 +148,7 @@ if __name__ == '__main__':
             for i in range(len(model.layers)):
                 model.layers[i].trainable = True
             model.compile(optimizer=optimizers.Adam(lr=args.lr),
-                          loss=loss_function)  # recompile to apply the change
+                          loss=loss_function, metrics=[abs_error])  # recompile to apply the change
         # train model
         print("= Regular Training =")
         model.fit(dataset.X_train, dataset.y_train,
