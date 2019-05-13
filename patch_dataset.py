@@ -504,7 +504,7 @@ class Dataset_Regression:
 
             train_patches = []
             for idx in training_indices:
-                import pdb; pdb.set_trace()
+                #import pdb; pdb.set_trace()
                 train_patches.append(np.array(class_patches[idx]))
             train_labels = class_labels[training_indices]
 
@@ -597,6 +597,7 @@ class Dataset_Rotated:
         self.patches, self.labels = self.process_images(random=random, num_patches = num_patches, new_shape=new_shape)
 
     def normalize_vector(self,mat):
+        #import pdb; pdb.set_trace()
         mean = np.mean(mat)
         std = np.std(mat)
         return (mat - mean) / std
@@ -730,7 +731,7 @@ class Dataset_Rotated:
         neg_patches = []
         labels = []
 
-        for angle in np.random.choice(np.arange(0, 360),10,replace=False):
+        for angle in np.random.choice(np.arange(0, 360),2,replace=False):
             rotated_original = imutils.rotate(original_image_img, angle)
 
             rotated_gnd = imutils.rotate(ground_truth_img, angle)
@@ -845,39 +846,46 @@ class Dataset_Rotated:
             pos_patches = np.array(pos_patches)[random_pos_ids]
             neg_patches = np.array(neg_patches)
 
-        print('POS EXAMPLES',len(pos_patches))
-        print('NEG EXAMPLES',len(neg_patches))
+        # print('POS EXAMPLES',len(pos_patches))
+        # print('NEG EXAMPLES',len(neg_patches))
 
         patches = np.vstack((pos_patches,neg_patches))
-
+        # print('LEN LABELS',len(labels))
+        # import pdb; pdb.set_trace()
         labels = [[0,1]]*len(pos_patches) + [[1,0]]*len(neg_patches)
-        return np.array(pos_patches), np.array(labels)
+        # print('len labels',len(labels))
+        return np.array(patches), np.array(labels)
 
     # assuming they all have the same (or similar names) and are alphabetical
     def process_images(self, random = True, num_patches = 1000, new_shape=(224,224)):
         ground_truth_files = os.listdir(self.ground_truth_location)
         original_image_files = os.listdir(self.original_image_location)
-
+        #import pdb; pdb.set_trace()
         ground_truth_files = sorted(ground_truth_files)
         original_image_files = sorted(original_image_files)
         patches = []
         labels = []
 
         for i in range(len(ground_truth_files)):
-            print(i)
-            ground_truth_name = self.ground_truth_location + ground_truth_files[i]
-            original_name = self.original_image_location + original_image_files[i]
-
+            # print(i)
+            ground_truth_name = self.ground_truth_location+'/' + ground_truth_files[i]
+            original_name = self.original_image_location +'/' + original_image_files[i]
+            #import pdb; pdb.set_trace()
             if random:
+                # print('RAND')
                 current_patches, current_labels = self.image_to_random_patches(original_name, ground_truth_name, num_patches, new_shape)
 
             else:
+                # print('SEQ')
                 current_patches, current_labels = self.image_to_sequential_patches(original_name, ground_truth_name, new_shape)
 
+            # print('SINGLE IMG')
+            # import pdb; pdb.set_trace()
             patches.extend(current_patches)
             labels.extend(current_labels)
-
-        return np.array(patches), np.array(labels)
+        # print('PROCES IMGAES')
+        # import pdb; pdb.set_trace()
+        return patches, labels
 
     def split_data(self, train_percent = 0.1, validation_percent = 0.2, balance_classes=False):
 

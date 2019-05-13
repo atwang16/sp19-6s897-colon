@@ -6,9 +6,12 @@ from train_from_directory import train_model_from_dir
 
 import keras
 import tensorflow as tf
+
 from keras import optimizers
 from keras.models import load_model
+
 import argparse
+from keras import backend as K
 
 import numpy as np
 
@@ -30,7 +33,7 @@ parser.add_argument('--validation_split', type=float, default=0.2, help='Percent
 
 # Model Hyper parameters
 parser.add_argument('--num_epochs', type=int, default=200, help='Number of epochs to train the model')
-parser.add_argument('--lr', type=float, default=0.001, help='Learning rate to train the model')
+parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate to train the model')
 parser.add_argument('--loss', type=str, default='sparse_categorical_crossentropy', help='Loss function to train the model with (binary_crossentropy | categorical_crossentropy)')
 
 # model save/load parameters
@@ -52,23 +55,20 @@ print('\n=== Initiating Model ===\n')
 
 if args.load_model is not None:
     model = load_model(args.load_model)
-else:
-    model = vgg((224, 224, 3), 2) # input size = (224, 224), number of classes = 2
+else: # default model VGG19
+	K.set_image_data_format('channels_last')
+	model = vgg((224, 224, 3), 2)
+
 
 print('\n=== Compiling Model ===\n')
 
-# optimizer
 adam = optimizers.Adam(lr=args.lr)
-
-# we expect to only separate between two different classes : polyp or not polyp
-model.compile(optimizer=adam, loss=args.loss, metrics=['accuracy', 'binary_accuracy'])
+model.compile(optimizer=adam, loss=args.loss, metrics=['accuracy'])
 
 
 print('\n=== Training Model ===\n')
 
 train_model_from_dir(args.train_path, args.valid_path, model, epochs=args.num_epochs)
-
-
 
 
 #END FILE

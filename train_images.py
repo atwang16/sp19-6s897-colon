@@ -1,6 +1,7 @@
 # python3 train_images.py --num_epochs 50 --train_percent .70 --random_patches False --lr 0.001 --output_dir balanced_medium_normed/ --type pvgg19 --model_name model
 
 
+ # python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches False --lr 0.001 --output_dir PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/ --type pvgg19 --model_name model --loss categorical_crossentropy --training_images data/segmentation/train/polyps/ --ground_truth data/segmentation/train/segmentations
 from keras import backend as K
 
 # importing model file
@@ -45,7 +46,7 @@ parser.add_argument('--loss', type=str, default='binary_crossentropy', help='Los
 parser.add_argument('--num_classes', type=int, default=2, help='Number of classes to separate the data into')
 parser.add_argument('--patch_size', type=int, default=32, help='Number of pixels per side in the patch')
 parser.add_argument('--num_patches', type=int, default=1, help='Number of patches generated per image')
-parser.add_argument('--resize_imgs', type=bool, default=True, help='Flag that will resize the images to (224,224) if True')
+parser.add_argument('--resize_imgs', type=bool, default=False, help='Flag that will resize the images to (224,224) if True')
 parser.add_argument('--type', type=str, default='vgg19', help='Determines which convolutional model to use. Valid options are {vgg19|resnet50|pvgg19}')
 
 # model save/load parameters
@@ -63,7 +64,7 @@ if not os.path.exists(args.output_dir):
 print("VERIFY USING GPU")
 # sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 gpu_devices = K.tensorflow_backend._get_available_gpus()
-print(f"GPU devices: {gpu_devices}")
+print("GPU devices: ",gpu_devices)
 print("----------------")
 # config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 56} )
 # sess = tf.Session(config=config)
@@ -75,10 +76,32 @@ if args.resize_imgs:
     dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches)
 else:
     dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches,new_shape=None)
+# (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
+train_patches = []
+train_labels = []
+valid_patches = []
+valid_labels = []
+import pdb; pdb.set_trace()
+training_idcs = set(np.random.choice(np.arange(len(dataset.patches)),int(args.train_percent*len(dataset.patches)),replace=False))
 
-(train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
 
-print('Positive Percent ::',sum(train_labels[:,1])/len(train_labels))
+num_pos = 0
+for i in np.arange(len(dataset.patches)):
+    if i in training_idcs:
+        train_patches.append(dataset.patches[i])
+        train_labels.append(dataset.labels[i])
+        # print(dataset.labels[i][1])
+        if dataset.labels[i][1] == 1:
+            num_pos += 1
+    else:
+        valid_patches.append(dataset.patches[i])
+        valid_labels.append(dataset.labels[i])
+
+# import pdb; pdb.set_trace()
+print('POS PERCENT ', num_pos/len(train_patches))
+# REMOVE ONLY FOR TESTING
+# valid_patches = valid_patches[0:100]
+# valid_labels = valid_labels[0:100]
 
 print('\n=== Initiating Model ===\n')
 
@@ -102,6 +125,11 @@ adam = optimizers.Adam(lr=args.lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay
 # we expect to only separate between two different classes : polyp or not polyp
 model.compile(optimizer=adam, loss=args.loss, metrics=['binary_accuracy','categorical_accuracy',auc_metric])
 
+# python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches Fal
+# se --lr 0.001 --output_dir PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/ --type pvgg19 --model_name model --loss categorical_crossentropy -
+# -training_images /home/austin_t_wang/sp19-6s897-colon/data/segmentation/train/polyps/ --ground_truth /home/austin_t_wang/sp19-6s897-colon/d
+# ata/segmentation/train/segmentations
+
 early_stop = True
 try:
     if not args.only_test:
@@ -109,7 +137,8 @@ try:
         # training the model
         if len(valid_patches) > 0:
             print('With validation')
-            history = model.fit(train_patches, train_labels, validation_data=(valid_patches, valid_labels), epochs=args.num_epochs)
+            import pdb; pdb.set_trace()
+            history = model.fit(np.array(train_patches), np.array(train_labels), validation_data=(np.array(valid_patches), np.array(valid_labels)), epochs=args.num_epochs, batch_size=100)
         else:
             print('Without validation')
             history = model.fit(train_patches, train_labels, epochs=args.num_epochs)
@@ -156,11 +185,11 @@ try:
 
     # evaluating model
     # loss, binary_accuracy, categorical_accuracy, auc
-    loss, binary_accuracy, categorical_accuracy, auc = model.evaluate(test_patches, test_labels)
-    print('TEST LOSS',loss)
-    print('TEST BINARY ACCURACY',binary_accuracy)
-    print('TEST CATEGORICAL ACCURACY',categorical_accuracy)
-    print('TEST AUC',auc)
+    # loss, binary_accuracy, categorical_accuracy, auc = model.evaluate(test_patches, test_labels)
+    # print('TEST LOSS',loss)
+    # print('TEST BINARY ACCURACY',binary_accuracy)
+    # print('TEST CATEGORICAL ACCURACY',categorical_accuracy)
+    # print('TEST AUC',auc)
 
     early_stop = False
 

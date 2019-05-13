@@ -3,7 +3,7 @@
 import os
 import sys
 from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import TensorBoard, ModelCheckpoint
+from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 import os,datetime
 from os.path import join
@@ -17,12 +17,10 @@ SAVINGS_DIR = join(PATH,'../../savings')
 
 
 def preprocessing_func(X):
-    # new_X = (X - np.mean(X)) / np.std(X)
-    # print(np.mean(X), np.std(X), np.max(X), np.min(X), np.mean(new_X), np.std(new_X), np.max(new_X), np.min(new_X))
     return (X - np.mean(X)) / np.std(X)
 
 def train_model_from_dir(
-    train_path, valid_path, model, model_name='model', target_size=(224, 224), batch_size=16, epochs=30, 
+    train_path, valid_path, model, model_name='model', target_size=(224, 224), batch_size=16, epochs=500, 
     preprocessing_function=preprocessing_func, params=None
     ):
 
@@ -45,8 +43,10 @@ def train_model_from_dir(
     train_generator = train_datagen.flow_from_directory(train_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True)         
     valid_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
     validation_generator = train_datagen.flow_from_directory(valid_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True)
-    print(next(train_generator))
-    tensorboard = TensorBoard(log_dir=MODEL_DIR, histogram_freq=0, write_graph=True, write_images=True)
+
+    tensorboard = TensorBoard(histogram_freq=0, write_graph=True, write_images=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.00001)
+    early_stop = EarlyStopping(monitor='val_loss', patience=50)
     checkpoint = ModelCheckpoint(join(MODEL_DIR,'model.h5'), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     
     history = model.fit_generator(
@@ -55,7 +55,7 @@ def train_model_from_dir(
         validation_data=validation_generator,
         validation_steps=validation_generator.samples//batch_size, 
         epochs=epochs, 
-        callbacks=[tensorboard, checkpoint])
+        callbacks=[tensorboard, reduce_lr, early_stop, checkpoint])
 
     pyplot.plot(history.history['acc'])
     pyplot.show()

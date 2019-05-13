@@ -4,14 +4,14 @@
 
 from keras import models
 from keras import layers
-from keras.applications.vgg19 import VGG19
+from keras.applications.vgg16 import VGG16
 
 
 
 def vgg(input_shape, num_classes):
 
     # convolutional layers
-    vgg_conv = VGG19(weights='imagenet', include_top=False, input_shape=input_shape)
+    vgg_conv = VGG16(weights='imagenet', include_top=False, input_shape=input_shape)
 
     # for layer in vgg_conv.layers:
     #   print(layer, layer.trainable)
