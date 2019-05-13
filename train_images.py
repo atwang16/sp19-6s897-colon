@@ -66,6 +66,8 @@ print("VERIFY USING GPU")
 gpu_devices = K.tensorflow_backend._get_available_gpus()
 print("GPU devices: ",gpu_devices)
 print("----------------")
+import tensorflow as tf
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 # config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 56} )
 # sess = tf.Session(config=config)
 # keras.backend.set_session(sess)
@@ -110,7 +112,7 @@ try:
         print('\n=== Training Model ===\n')
         # training the model
         model.fit_generator(generator=training_generator,
-                            steps_per_epoch=len(training_generator))
+                            steps_per_epoch=len(training_generator), epochs=args.num_epochs)
 
         print('\n=== Saving Model ===\n')
 
