@@ -210,7 +210,7 @@ class YoloDataset(Dataset):
         return y_true
 
     # assuming they all have the same (or similar names) and are alphabetical
-    def load_images(self, split, seg_format, percent=1.0):
+    def load_images(self, split, seg_format, percent=1.0, preserve_original=False):
         original_image_files = sorted((os.path.join(self.images_dir[split], "polyps", f)
                                        for f in os.listdir(os.path.join(self.images_dir[split], "polyps"))
                                        if f[0] != "."), key=natural_keys)
