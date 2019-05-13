@@ -61,10 +61,10 @@ def resnet(input_shape, layers, pretrained_weights=None, use_sigmoid=False):
 
     # Fully connected
     x = AveragePooling2D(pool_size=1)(x)
-    y = Flatten()(x)
-    y = Dense(1024, kernel_initializer="he_normal")(y)
-    y = BatchNormalization()(y)
-    y = Activation("relu")(y)
+    x = Flatten()(x)
+    x = Dense(1024, kernel_initializer="he_normal")(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
     if use_sigmoid:
         assert input_shape[0] == input_shape[1], "Currently only support equal width and height"
         outputs = Dense(4, activation="sigmoid")(x)
