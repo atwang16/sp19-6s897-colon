@@ -10,6 +10,9 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras.regularizers import l2
+from keras.models import load_model
+from timeit import default_timer as timer
+from PIL import Image, ImageDraw
 # import keras
 # from keras.layers import Dense, Activation
 # from keras.layers import AveragePooling2D, MaxPool2D, Flatten
@@ -358,7 +361,7 @@ def get_anchors(anchors_path):
     return np.array(anchors).reshape(-1, 2)
 
 
-def yolov3(input_shape, pretrained_weights=None, freeze_body=2):
+def yolov3(input_shape, pretrained_weights=None, freeze_body=2, for_training=True):
     """
     create the training model
     :param input_shape:
@@ -369,6 +372,9 @@ def yolov3(input_shape, pretrained_weights=None, freeze_body=2):
     :param weights_path:
     :return:
     """
+    if not for_training:
+        pass
+
     anchors = get_anchors(ANCHOR_PATH)
 
     image_input = Input(shape=(None, None, 3))
@@ -394,3 +400,85 @@ def yolov3(input_shape, pretrained_weights=None, freeze_body=2):
     model = Model([model_body.input, *y_true], model_loss)
 
     return model
+
+class YOLO(object):
+    _defaults = {
+        "model_path": 'model_data/yolo.h5',
+        "anchors_path": 'models/yolo_anchors.txt',
+        "score" : 0.3,
+        "iou" : 0.45,
+        "model_image_size" : (224, 224)
+    }
+
+    @classmethod
+    def get_defaults(cls, n):
+        if n in cls._defaults:
+            return cls._defaults[n]
+        else:
+            return "Unrecognized attribute name '" + n + "'"
+
+    def __init__(self, **kwargs):
+        self.__dict__.update(self._defaults) # set up default values
+        self.__dict__.update(kwargs) # and update with user overrides
+        self.class_names = self._get_class()
+        self.anchors = self._get_anchors()
+        self.sess = K.get_session()
+        self.boxes, self.scores, self.classes = self.generate()
+
+    def _get_class(self):
+        return ["polyp"]
+
+    def _get_anchors(self):
+        anchors_path = os.path.expanduser(self.anchors_path)
+        with open(anchors_path) as f:
+            anchors = f.readline()
+        anchors = [float(x) for x in anchors.split(',')]
+        return np.array(anchors).reshape(-1, 2)
+
+    def generate(self):
+        model_path = os.path.expanduser(self.model_path)
+        assert model_path.endswith('.h5'), 'Keras model or weights must be a .h5 file.'
+
+        # Load model, or construct model and load weights.
+        num_anchors = len(self.anchors)
+        num_classes = len(self.class_names)
+
+        self.yolo_model = yolo_body(Input(shape=(None,None,3)), num_anchors // 3, num_classes)
+        self.yolo_model.load_weights(self.model_path, by_name=True, skip_mismatch=True)
+
+        assert self.yolo_model.layers[-1].output_shape[-1] == \
+               num_anchors / len(self.yolo_model.output) * (num_classes + 5), \
+            'Mismatch between model and given anchor and class sizes'
+
+        print('{} model, anchors, and classes loaded.'.format(model_path))
+
+        # Generate colors for drawing bounding boxes.
+        self.colors = [[0, 255, 255]]
+
+        # Generate output tensor targets for filtered bounding boxes.
+        self.input_image_shape = K.placeholder(shape=(2, ))
+        boxes, scores, classes = yolo_eval(self.yolo_model.output, self.anchors,
+                len(self.class_names), self.input_image_shape,
+                score_threshold=self.score, iou_threshold=self.iou)
+        return boxes, scores, classes
+
+    def evaluate_on_image(self, X):
+        output = []
+        for i in range(X.shape[0]):
+            img = X[i, ...]
+            img = np.expand_dims(img, 0)
+
+            out_boxes, out_scores, out_classes = self.sess.run(
+                [self.boxes, self.scores, self.classes],
+                feed_dict={
+                    self.yolo_model.input: img,
+                    self.input_image_shape: self.model_image_size[:2],
+                    K.learning_phase(): 0
+                })
+            y_min, x_min, y_max, x_max = out_boxes[0]
+            output.append([x_min, y_min, x_max, y_max])
+
+        return np.array(output)
+
+    def close_session(self):
+        self.sess.close()
