@@ -79,11 +79,11 @@ else:
 import pdb; pdb.set_trace()
 # (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
 
-train_patches = dataset.patches[:.9*len(dataset.patches)]
-train_labels = dataset.labels[:.9*len(dataset.patches)]
+train_patches = dataset.patches[:int(args.train_percent*len(dataset.patches))]
+train_labels = dataset.labels[:int(args.train_percent*len(dataset.patches))]
 
-valid_patches = dataset.patches[.9*len(dataset.patches):]
-valid_labels = dataset.labels[.9*len(dataset.patches):]
+valid_patches = dataset.patches[int(args.train_percent*len(dataset.patches)):]
+valid_labels = dataset.labels[int(args.train_percent*len(dataset.patches)):]
 
 print('Positive Percent ::',sum(train_labels[:,1])/len(train_labels))
 
