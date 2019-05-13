@@ -110,7 +110,7 @@ model.compile(optimizer=adam, loss=args.loss, metrics=['binary_accuracy','catego
 # se --lr 0.001 --output_dir PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/ --type pvgg19 --model_name model --loss categorical_crossentropy -
 # -training_images /home/austin_t_wang/sp19-6s897-colon/data/segmentation/train/polyps/ --ground_truth /home/austin_t_wang/sp19-6s897-colon/d
 # ata/segmentation/train/segmentations
-mc = keras.callbacks.ModelCheckpoint(args.output_dir+'/model_checkpoint.h5', save_best_only = True, save_weights_only=True, period=5)
+mc = keras.callbacks.ModelCheckpoint(args.output_dir+'/model_checkpoint.h5', save_best_only = True, save_weights_only=True, period=1)
 
 early_stop = True
 try:
