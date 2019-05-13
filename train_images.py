@@ -1,6 +1,7 @@
 # python3 train_images.py --num_epochs 50 --train_percent .70 --random_patches False --lr 0.001 --output_dir balanced_medium_normed/ --type pvgg19 --model_name model
 
 
+from keras import backend as K
 
 # importing model file
 import models.vgg19 as vgg19
@@ -29,8 +30,8 @@ parser = argparse.ArgumentParser(description='Polyp Detecting Model')
 parser.add_argument('--only_test', type=bool, default=False, help='Flag such that, if true, the model will only be evaluated on the dataset passed in split by train_percent, validation_percent, etc')
 
 # data location
-parser.add_argument('--training_images', type=str, default='ETIS-LaribPolypDB/GroundTruth/', help='folder that contains all images that the model will be trained on')
-parser.add_argument('--ground_truth', type=str, default='ETIS-LaribPolypDB/ETIS-LaribPolypDB/', help='folder that contains all images that contain the ground truth files')
+parser.add_argument('--training_images', type=str, default='ETIS-LaribPolypDB/ETIS-LaribPolypDB/', help='folder that contains all images that the model will be trained on')
+parser.add_argument('--ground_truth', type=str, default='ETIS-LaribPolypDB/GroundTruth/', help='folder that contains all images that contain the ground truth files')
 
 # data parameters
 parser.add_argument('--random_patches', type=bool, default=True, help='Boolean parameter, True means we sample patches randomly from the dataset images and False is the opposite')

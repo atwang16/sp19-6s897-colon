@@ -726,104 +726,108 @@ class Dataset_Rotated:
         original_image_img = cv2.cvtColor(original_image_img, cv2.COLOR_BGR2RGB)
         original_image_img = self.normalize_vector(original_image_img)
 
-        # for angle in np.arange(0, 360, 15):
-        #     rotated = imutils.rotate(image, angle)
-
-        y_size,x_size = ground_truth_img.shape
-        def x_trunc(x_val):
-            return max(0,min(x_size,x_val))
-
-        def y_trunc(y_val):
-            return max(0,min(y_size,y_val))
-
-        left, upper, right, lower = 0, 0, self.patch_size, self.patch_size
-        box = (left, upper, right, lower)
-
         pos_patches = []
         neg_patches = []
         labels = []
-        for x in range(0,x_size,self.patch_size):
-            for y in range(0,y_size,self.patch_size):
-                y_lower = y+self.patch_size
-                x_right = x+self.patch_size
-                left, upper, right, lower = x, y, x_trunc(x_right), y_trunc(y_lower)
 
-                # this is the case that the bounding box is not patch_size x patch_size
-                # we cannot pass this into the CNN
-                if x_trunc(x_right) != x_right or y_trunc(y_lower) != y_lower:
-                    continue
+        for angle in np.random.choice(np.arange(0, 360),10,replace=False):
+            rotated_original = imutils.rotate(original_image_img, angle)
 
-                # print(x_right,x_trunc(x_right))
-                # print(y_lower,y_trunc(y_lower))
-
-                box = (left, upper, right, lower)
-
-                ground_truth_patch = ground_truth_img[upper:lower, left:right]
-                original_image_patch = original_image_img[upper:lower, left:right]
-
-                shift_x = int(np.random.rand()*(self.patch_size/2))
-                shift_y = int(np.random.rand()*(self.patch_size/2))
-
-                # UL
-                UL = original_image_img[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
-
-                # UC
-                UC = original_image_img[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left):x_trunc(right)]
-
-                # UR
-                UR = original_image_img[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
+            rotated_gnd = imutils.rotate(ground_truth_img, angle)
 
 
+            y_size,x_size = ground_truth_img.shape
+            def x_trunc(x_val):
+                return max(0,min(x_size,x_val))
 
-                # LL
-                LL = original_image_img[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+            def y_trunc(y_val):
+                return max(0,min(y_size,y_val))
 
-                # LC
-                LC = original_image_img[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left):x_trunc(right)]
+            left, upper, right, lower = 0, 0, self.patch_size, self.patch_size
+            box = (left, upper, right, lower)
 
-                # LR
-                LR = original_image_img[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
+            for x in range(0,x_size,self.patch_size):
+                for y in range(0,y_size,self.patch_size):
+                    y_lower = y+self.patch_size
+                    x_right = x+self.patch_size
+                    left, upper, right, lower = x, y, x_trunc(x_right), y_trunc(y_lower)
 
+                    # this is the case that the bounding box is not patch_size x patch_size
+                    # we cannot pass this into the CNN
+                    if x_trunc(x_right) != x_right or y_trunc(y_lower) != y_lower:
+                        continue
 
+                    # print(x_right,x_trunc(x_right))
+                    # print(y_lower,y_trunc(y_lower))
 
-                # CL
-                CL = original_image_img[y_trunc(upper):y_trunc(lower), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+                    box = (left, upper, right, lower)
 
-                # CR
-                CR = original_image_img[y_trunc(upper):y_trunc(lower), x_trunc(left+shift_x):x_trunc(right+shift_x)]
+                    ground_truth_patch = ground_truth_img[upper:lower, left:right]
+                    original_image_patch = original_image_img[upper:lower, left:right]
+
+                    shift_x = int(np.random.rand()*(self.patch_size/2))
+                    shift_y = int(np.random.rand()*(self.patch_size/2))
+
+                    # UL
+                    UL = original_image_img[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+
+                    # UC
+                    UC = original_image_img[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left):x_trunc(right)]
+
+                    # UR
+                    UR = original_image_img[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
 
 
 
-                patch_array = np.array(ground_truth_patch)
-                mean_patch_value = patch_array.mean()
-                if mean_patch_value >= 0.75:
-                    label = 1
+                    # LL
+                    LL = original_image_img[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
 
-                    if UL.shape == (self.patch_size,self.patch_size,3):
-                        pos_patches.append(UL)
+                    # LC
+                    LC = original_image_img[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left):x_trunc(right)]
 
-                    if UC.shape == (self.patch_size,self.patch_size,3):
-                        pos_patches.append(UC)
-                    if UR.shape == (self.patch_size,self.patch_size,3):
-                        pos_patches.append(UR)
-                    if LL.shape == (self.patch_size,self.patch_size,3):
-                        pos_patches.append(LL)
+                    # LR
+                    LR = original_image_img[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
 
-                    if LC.shape == (self.patch_size,self.patch_size,3):
-                        pos_patches.append(LC)
 
-                    if LR.shape == (self.patch_size,self.patch_size,3):
-                        pos_patches.append(LR)
 
-                    if CL.shape == (self.patch_size,self.patch_size,3):
-                        pos_patches.append(CL)
+                    # CL
+                    CL = original_image_img[y_trunc(upper):y_trunc(lower), x_trunc(left-shift_x):x_trunc(right-shift_x)]
 
-                    if CR.shape == (self.patch_size,self.patch_size,3):
-                        pos_patches.append(CR)
+                    # CR
+                    CR = original_image_img[y_trunc(upper):y_trunc(lower), x_trunc(left+shift_x):x_trunc(right+shift_x)]
 
-                    pos_patches.append(original_image_patch)
-                else:
-                    neg_patches.append(original_image_patch)
+
+
+                    patch_array = np.array(ground_truth_patch)
+                    mean_patch_value = patch_array.mean()
+                    if mean_patch_value >= 0.75:
+                        label = 1
+
+                        if UL.shape == (self.patch_size,self.patch_size,3):
+                            pos_patches.append(UL)
+
+                        if UC.shape == (self.patch_size,self.patch_size,3):
+                            pos_patches.append(UC)
+                        if UR.shape == (self.patch_size,self.patch_size,3):
+                            pos_patches.append(UR)
+                        if LL.shape == (self.patch_size,self.patch_size,3):
+                            pos_patches.append(LL)
+
+                        if LC.shape == (self.patch_size,self.patch_size,3):
+                            pos_patches.append(LC)
+
+                        if LR.shape == (self.patch_size,self.patch_size,3):
+                            pos_patches.append(LR)
+
+                        if CL.shape == (self.patch_size,self.patch_size,3):
+                            pos_patches.append(CL)
+
+                        if CR.shape == (self.patch_size,self.patch_size,3):
+                            pos_patches.append(CR)
+
+                        pos_patches.append(original_image_patch)
+                    else:
+                        neg_patches.append(original_image_patch)
 
 
 
