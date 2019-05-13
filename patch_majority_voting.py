@@ -3,6 +3,7 @@ import numpy as np
 
 import argparse
 
+parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
 # data location
 parser.add_argument('--images', type=str, default='ETIS-LaribPolypDB/ETIS-LaribPolypDB/', help='folder that contains all images that the model will be trained on')
 parser.add_argument('--ground_truth', type=str, default='ETIS-LaribPolypDB/GroundTruth/', help='folder that contains all images that contain the ground truth files')
@@ -12,6 +13,7 @@ parser.add_argument('--batch_size', type=int, default=1, help='Number of pixels 
 
 parser.add_argument('--load_model', type=str, default=None, help='Name of a model that will be loaded')
 
+args = parser.parse_args()
 
 dataset = data.Generator_Dataset_Rotated(args.patch_size, args.images, args.ground_truth, batch_size=args.batch_size)
 
