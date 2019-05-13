@@ -76,7 +76,7 @@ def resnet(input_shape, layers, pretrained_weights=None, use_sigmoid=False):
     model = Model(inputs=inputs, outputs=outputs)
 
     if pretrained_weights is not None:
-        model.load_weights(pretrained_weights)
+        model.load_weights(pretrained_weights, by_name=True)
 
     return model
 
