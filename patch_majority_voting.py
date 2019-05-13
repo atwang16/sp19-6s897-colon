@@ -36,8 +36,8 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
     print('Threshold',threshold)
     predicted_labels = []
     for i in range(len(ground_truth_files)):
-        ground_truth_name = self.ground_truth_location+'/' + ground_truth_files[i]
-        original_name = self.original_image_location +'/' + original_image_files[i]
+        ground_truth_name = args.ground_truth+'/' + ground_truth_files[i]
+        original_name = args.images +'/' + original_image_files[i]
 
         img_patches, img_labels = datset.image_to_sequential_patches(original_name, ground_truth)
 
