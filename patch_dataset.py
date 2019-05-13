@@ -141,7 +141,7 @@ class Dataset:
                 class_probs = [0,0]
                 class_probs[label] = 1
                 labels.append(np.array(class_probs))
-        return np.array(patches), np.array(labels)
+        return patches, labels
 
     # assuming they all have the same (or similar names) and are alphabetical
     def process_images(self, random = True, num_patches = 1000, new_shape=(224,224)):
