@@ -858,7 +858,7 @@ class Dataset_Rotated:
     def process_images(self, random = True, num_patches = 1000, new_shape=(224,224)):
         ground_truth_files = os.listdir(self.ground_truth_location)
         original_image_files = os.listdir(self.original_image_location)
-
+        import pdb; pdb.set_trace()
         ground_truth_files = sorted(ground_truth_files)
         original_image_files = sorted(original_image_files)
         patches = []
@@ -868,7 +868,7 @@ class Dataset_Rotated:
             print(i)
             ground_truth_name = self.ground_truth_location + ground_truth_files[i]
             original_name = self.original_image_location + original_image_files[i]
-
+            import pdb; pdb.set_trace()
             if random:
                 current_patches, current_labels = self.image_to_random_patches(original_name, ground_truth_name, num_patches, new_shape)
 
