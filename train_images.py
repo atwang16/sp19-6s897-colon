@@ -2,6 +2,10 @@
 
 
  # python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches False --lr 0.001 --output_dir PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/ --type pvgg19 --model_name model --loss categorical_crossentropy --training_images data/segmentation/train/polyps/ --ground_truth data/segmentation/train/segmentations
+
+
+# python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches False --lr 0.001 --output_dir PATCH_balanced_resnet50_lr_001_trP_70_vP_10/ --type resnet50 --model_name model --loss categorical_crossentropy --training_images data/segmentation/train/polyps/ --ground_truth data/segmentation/train/segmentations
+
 from keras import backend as K
 
 # importing model file
@@ -46,6 +50,7 @@ parser.add_argument('--loss', type=str, default='binary_crossentropy', help='Los
 parser.add_argument('--num_classes', type=int, default=2, help='Number of classes to separate the data into')
 parser.add_argument('--patch_size', type=int, default=32, help='Number of pixels per side in the patch')
 parser.add_argument('--num_patches', type=int, default=1, help='Number of patches generated per image')
+parser.add_argument('--batch_size', type=int, default=1000, help='Number of batches')
 parser.add_argument('--resize_imgs', type=bool, default=False, help='Flag that will resize the images to (224,224) if True')
 parser.add_argument('--type', type=str, default='vgg19', help='Determines which convolutional model to use. Valid options are {vgg19|resnet50|pvgg19}')
 
@@ -66,42 +71,18 @@ print("VERIFY USING GPU")
 gpu_devices = K.tensorflow_backend._get_available_gpus()
 print("GPU devices: ",gpu_devices)
 print("----------------")
+import tensorflow as tf
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 # config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 56} )
 # sess = tf.Session(config=config)
 # keras.backend.set_session(sess)
 
 print('\n=== Setting Up Data ===\n')
 
-if args.resize_imgs:
-    dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches)
-else:
-    dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches,new_shape=None)
+training_generator = data.Generator_Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, batch_size=args.batch_size)
+
 # (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
-train_patches = []
-train_labels = []
-valid_patches = []
-valid_labels = []
-import pdb; pdb.set_trace()
-training_idcs = set(np.random.choice(np.arange(len(dataset.patches)),int(args.train_percent*len(dataset.patches)),replace=False))
 
-
-num_pos = 0
-for i in np.arange(len(dataset.patches)):
-    if i in training_idcs:
-        train_patches.append(dataset.patches[i])
-        train_labels.append(dataset.labels[i])
-        # print(dataset.labels[i][1])
-        if dataset.labels[i][1] == 1:
-            num_pos += 1
-    else:
-        valid_patches.append(dataset.patches[i])
-        valid_labels.append(dataset.labels[i])
-
-# import pdb; pdb.set_trace()
-print('POS PERCENT ', num_pos/len(train_patches))
-# REMOVE ONLY FOR TESTING
-# valid_patches = valid_patches[0:100]
-# valid_labels = valid_labels[0:100]
 
 print('\n=== Initiating Model ===\n')
 
@@ -109,11 +90,11 @@ if args.load_model is not None:
     model = load_model(args.load_model)
 else:
     if args.type == 'vgg19':
-        model = vgg19.vgg(dataset.input_shape, args.num_classes)
+        model = vgg19.vgg(training_generator.input_shape, args.num_classes)
     elif args.type == 'resnet50':
-        model = resnet50.resnet(dataset.input_shape, args.num_classes)
+        model = resnet50.resnet(training_generator.input_shape, args.num_classes)
     elif args.type == 'pvgg19':
-        model = pvgg19.patch_vgg(dataset.input_shape, args.num_classes)
+        model = pvgg19.patch_vgg(training_generator.input_shape, args.num_classes)
 
 model.summary()
 
@@ -135,61 +116,56 @@ try:
     if not args.only_test:
         print('\n=== Training Model ===\n')
         # training the model
-        if len(valid_patches) > 0:
-            print('With validation')
-            import pdb; pdb.set_trace()
-            history = model.fit(np.array(train_patches), np.array(train_labels), validation_data=(np.array(valid_patches), np.array(valid_labels)), epochs=args.num_epochs, batch_size=100)
-        else:
-            print('Without validation')
-            history = model.fit(train_patches, train_labels, epochs=args.num_epochs)
+        model.fit_generator(generator=training_generator,
+                            steps_per_epoch=len(training_generator), epochs=args.num_epochs)
 
         print('\n=== Saving Model ===\n')
 
         model.save(args.output_dir+args.model_name+'.h5')
 
+        plt.plot(history.history['loss'])
+        plt.title('Model Loss')
+        plt.ylabel('Loss')
+        plt.xlabel('Epoch')
+        plt.savefig(args.output_dir+'loss_over_epochs.png')
+        plt.close()
+
+        plt.plot(history.history['categorical_accuracy'])
+        plt.plot(history.history['val_categorical_accuracy'])
+        plt.title('Model Categorical Accuracy')
+        plt.ylabel('Categorical Accuracy')
+        plt.xlabel('Epoch')
+        plt.legend(['Train','Test'],loc='upper left')
+        plt.savefig(args.output_dir+'categorical_over_epochs.png')
+        plt.close()
+
+        plt.plot(history.history['binary_accuracy'])
+        plt.plot(history.history['val_binary_accuracy'])
+        plt.title('Model Binary Accuracy')
+        plt.ylabel('Binary Accuracy')
+        plt.xlabel('Epoch')
+        plt.legend(['Train','Test'],loc='upper left')
+        plt.savefig(args.output_dir+'binary_over_epochs.png')
+        plt.close()
+
+        plt.plot(history.history['auc_metric'])
+        plt.plot(history.history['val_auc_metric'])
+        plt.title('Model AUC')
+        plt.ylabel('AUC')
+        plt.xlabel('Epoch')
+        plt.legend(['Train','Test'],loc='upper left')
+        plt.savefig(args.output_dir+'auc_over_epochs.png')
+        plt.close()
+
     print('\n=== Evaluating Model ===\n')
-
-    plt.plot(history.history['loss'])
-    plt.title('Model Loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.savefig(args.output_dir+'loss_over_epochs.png')
-    plt.close()
-
-    plt.plot(history.history['categorical_accuracy'])
-    plt.plot(history.history['val_categorical_accuracy'])
-    plt.title('Model Categorical Accuracy')
-    plt.ylabel('Categorical Accuracy')
-    plt.xlabel('Epoch')
-    plt.legend(['Train','Test'],loc='upper left')
-    plt.savefig(args.output_dir+'categorical_over_epochs.png')
-    plt.close()
-
-    plt.plot(history.history['binary_accuracy'])
-    plt.plot(history.history['val_binary_accuracy'])
-    plt.title('Model Binary Accuracy')
-    plt.ylabel('Binary Accuracy')
-    plt.xlabel('Epoch')
-    plt.legend(['Train','Test'],loc='upper left')
-    plt.savefig(args.output_dir+'binary_over_epochs.png')
-    plt.close()
-
-    plt.plot(history.history['auc_metric'])
-    plt.plot(history.history['val_auc_metric'])
-    plt.title('Model AUC')
-    plt.ylabel('AUC')
-    plt.xlabel('Epoch')
-    plt.legend(['Train','Test'],loc='upper left')
-    plt.savefig(args.output_dir+'auc_over_epochs.png')
-    plt.close()
 
     # evaluating model
     # loss, binary_accuracy, categorical_accuracy, auc
-    # loss, binary_accuracy, categorical_accuracy, auc = model.evaluate(test_patches, test_labels)
-    # print('TEST LOSS',loss)
-    # print('TEST BINARY ACCURACY',binary_accuracy)
-    # print('TEST CATEGORICAL ACCURACY',categorical_accuracy)
-    # print('TEST AUC',auc)
+    loss, binary_accuracy, categorical_accuracy, auc = model.evaluate_generator(training_generator)
+    print('TEST LOSS',loss)
+    print('TEST BINARY ACCURACY',binary_accuracy)
+    print('TEST CATEGORICAL ACCURACY',categorical_accuracy)
+    print('TEST AUC',auc)
 
     early_stop = False
 
