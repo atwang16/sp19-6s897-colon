@@ -44,6 +44,12 @@ def get_model(typ, input_shape, pretrained_weights):
     return model, loss
 
 
+def abs_error(y_true, y_pred):
+    y_true = K.sum(y_true)
+    y_pred = K.sum(y_pred)
+    return K.abs(y_true-y_pred)
+
+
 if __name__ == '__main__':
     # Loading arguments
     parser = argparse.ArgumentParser(description='Polyp Detecting Model')
@@ -104,11 +110,11 @@ if __name__ == '__main__':
     logging = TensorBoard(log_dir=args.output_dir)
     checkpoint_name = '%s_model.{epoch:03d}.h5' % args.type
     checkpoint = ModelCheckpoint(filepath=os.path.join(args.output_dir, checkpoint_name),
-                                 monitor='val_loss',
+                                 monitor='val_abs_error',
                                  verbose=1,
                                  save_best_only=True,
                                  mode='min')
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1**0.5, patience=12, verbose=1)
     # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
 
     callbacks = [logging, checkpoint, reduce_lr]
@@ -117,9 +123,9 @@ if __name__ == '__main__':
     adam = optimizers.Adam(lr=args.lr)  # beta_1=0.9, beta_2=0.999, decay=0.0
 
     if args.type == "yolov3":
-        model.compile(optimizer=adam, loss=loss_function)
+        model.compile(optimizer=adam, loss=loss_function, metrics=[abs_error])
     else:
-        model.compile(optimizer=adam, loss=loss_function, metrics=[evaluate.rmse, evaluate.get_dice_score(localization_format)])
+        model.compile(optimizer=adam, loss=loss_function, metrics=[evaluate.rmse, evaluate.get_dice_score(localization_format), abs_error])
 
     print('\n=== Training Model ===\n')
 
@@ -143,13 +149,11 @@ if __name__ == '__main__':
                 model.layers[i].trainable = True
             model.compile(optimizer=optimizers.Adam(lr=args.lr),
                           loss=loss_function)  # recompile to apply the change
-        else:
-            epochs_to_train = 0
         # train model
         print("= Regular Training =")
         model.fit(dataset.X_train, dataset.y_train,
                   validation_data=(dataset.X_val, dataset.y_val),
-                  epochs=args.num_epochs - epochs_to_train,
+                  epochs=args.num_epochs,
                   initial_epoch=initial_epoch,
                   batch_size=args.batch_size,
                   callbacks=callbacks)
