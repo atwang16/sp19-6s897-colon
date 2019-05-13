@@ -210,7 +210,7 @@ class YoloDataset(Dataset):
         return y_true
 
     # assuming they all have the same (or similar names) and are alphabetical
-    def load_images(self, split, seg_format, percent=1.0):
+    def load_images(self, split, seg_format, percent=1.0, preserve_original=False):
         original_image_files = sorted((os.path.join(self.images_dir[split], "polyps", f)
                                        for f in os.listdir(os.path.join(self.images_dir[split], "polyps"))
                                        if f[0] != "."), key=natural_keys)
@@ -225,14 +225,25 @@ class YoloDataset(Dataset):
         if percent == 0.0 or percent == 1.0:
             images = np.zeros((len(original_image_files), *self.input_shape))
             labels = np.zeros((len(original_image_files), 1, *segmentation_shape))
+            if preserve_original:
+                original_images = [None for _ in range(len(original_image_files))]
+            else:
+                original_images = None
 
             for i, image_path in enumerate(original_image_files):
                 segmentation_path = segmentation_files[i]
-                images[i, :, :, :] = self.read_image(image_path)
+                imgs = self.read_image(image_path, preserve_original)
+                if preserve_original:
+                    original_images[i], images[i, :, :, :] = imgs
+                else:
+                    images[i, :, :, :] = imgs
                 labels[i, :] = self.read_segmentation(segmentation_path, seg_format)
 
             y_true = YoloDataset.preprocess_true_boxes(labels, self.input_shape[:2], self.anchors, 1)
-            return [images, *y_true], np.zeros((len(original_image_files), *segmentation_shape))
+            if preserve_original:
+                return original_images, [images, *y_true], np.zeros((len(original_image_files), *segmentation_shape))
+            else:
+                return [images, *y_true], np.zeros((len(original_image_files), *segmentation_shape))
         else:
             split_1_size = int(len(original_image_files) * percent)
             split_2_size = len(original_image_files) - split_1_size
