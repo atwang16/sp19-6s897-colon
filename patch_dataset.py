@@ -731,7 +731,7 @@ class Dataset_Rotated:
         neg_patches = []
         labels = []
 
-        for angle in np.random.choice(np.arange(0, 360),10,replace=False):
+        for angle in np.random.choice(np.arange(0, 360),2,replace=False):
             rotated_original = imutils.rotate(original_image_img, angle)
 
             rotated_gnd = imutils.rotate(ground_truth_img, angle)
