@@ -851,6 +851,7 @@ class Dataset_Rotated:
 
         patches = np.vstack((pos_patches,neg_patches))
         print('LEN LABELS',len(labels))
+        import pdb; pdb.set_trace()
         labels = [[0,1]]*len(pos_patches) + [[1,0]]*len(neg_patches)
         print('len labels',len(labels))
         return np.array(pos_patches), np.array(labels)
