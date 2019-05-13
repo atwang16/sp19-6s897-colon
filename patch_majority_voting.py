@@ -8,6 +8,8 @@ from roc_callback import auc_metric
 
 import argparse
 
+import os
+
 parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
 # data location
 parser.add_argument('--images', type=str, default='ETIS-LaribPolypDB/ETIS-LaribPolypDB/', help='folder that contains all images that the model will be trained on')
