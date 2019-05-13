@@ -850,11 +850,11 @@ class Dataset_Rotated:
         print('NEG EXAMPLES',len(neg_patches))
 
         patches = np.vstack((pos_patches,neg_patches))
-        print('LEN LABELS',len(labels))
-        import pdb; pdb.set_trace()
+        # print('LEN LABELS',len(labels))
+        # import pdb; pdb.set_trace()
         labels = [[0,1]]*len(pos_patches) + [[1,0]]*len(neg_patches)
-        print('len labels',len(labels))
-        return np.array(pos_patches), np.array(labels)
+        # print('len labels',len(labels))
+        return np.array(patches), np.array(labels)
 
     # assuming they all have the same (or similar names) and are alphabetical
     def process_images(self, random = True, num_patches = 1000, new_shape=(224,224)):
@@ -880,11 +880,11 @@ class Dataset_Rotated:
                 current_patches, current_labels = self.image_to_sequential_patches(original_name, ground_truth_name, new_shape)
 
             print('SINGLE IMG')
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             patches.extend(current_patches)
             labels.extend(current_labels)
         print('PROCES IMGAES')
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         return np.array(patches), np.array(labels)
 
     def split_data(self, train_percent = 0.1, validation_percent = 0.2, balance_classes=False):
