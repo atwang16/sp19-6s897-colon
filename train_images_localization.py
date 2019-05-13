@@ -113,6 +113,7 @@ if __name__ == '__main__':
                                  monitor='val_abs_error',
                                  verbose=1,
                                  save_best_only=True,
+                                 save_weights_only=True,
                                  mode='min')
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1**0.5, patience=12, verbose=1)
     # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
@@ -142,7 +143,7 @@ if __name__ == '__main__':
                       initial_epoch=initial_epoch,
                       batch_size=args.batch_size,
                       callbacks=[logging, checkpoint])
-            model.save(os.path.join(args.output_dir, f"{model_name}_initial.h5"))
+            model.save_weights(os.path.join(args.output_dir, f"{model_name}_initial.h5"))
             initial_epoch += epochs_to_train
 
             for i in range(len(model.layers)):
@@ -159,47 +160,7 @@ if __name__ == '__main__':
                   callbacks=callbacks)
 
         print('\n=== Saving Model ===\n')
-        model.save(os.path.join(args.output_dir, f"{model_name}_final.h5"))
-
-        # print('\n=== Evaluating Model ===\n')
-        #
-        # if history is not None:
-        #     print(history.history)
-        #     plt.plot(history.history['loss'])
-        #     plt.plot(history.history['val_loss'])
-        #     plt.title('Model Loss')
-        #     plt.ylabel('Loss')
-        #     plt.xlabel('Epoch')
-        #     plt.legend(['Train', 'Validation'], loc='upper left')
-        #     plt.savefig(os.path.join(args.output_dir, 'loss_over_epochs.png'))
-        #     plt.close()
-        #
-        #     dice_score = None
-        #     if "dice_score_box" in history.history:
-        #         dice_score = "dice_score_box"
-        #     elif "dice_score_center" in history.history:
-        #         dice_score = "dice_score_center"
-        #
-        #     if dice_score is not None:
-        #         plt.plot(history.history[dice_score])
-        #         plt.plot(history.history[f"val_{dice_score}"])
-        #         plt.title('Model Dice Score')
-        #         plt.ylabel('Dice Score')
-        #         plt.xlabel('Epoch')
-        #         plt.legend(['Train','Validation'],loc='upper left')
-        #         plt.savefig(os.path.join(args.output_dir, 'dice_over_epochs.png'))
-        #         plt.close()
-        #
-        #     plt.plot(history.history["rmse"])
-        #     plt.plot(history.history["val_rmse"])
-        #     plt.title('Model rMSE')
-        #     plt.ylabel('rMSE')
-        #     plt.xlabel('Epoch')
-        #     plt.legend(['Train','Validation'],loc='upper left')
-        #     plt.savefig(os.path.join(args.output_dir, 'rmse_over_epochs.png'))
-        #     plt.close()
-
-        # TODO: evaluate
+        model.save_weights(os.path.join(args.output_dir, f"{model_name}_final.h5"))
 
         early_stop = False
 
