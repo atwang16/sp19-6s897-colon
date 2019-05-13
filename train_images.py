@@ -72,36 +72,10 @@ print("----------------")
 
 print('\n=== Setting Up Data ===\n')
 
-if args.resize_imgs:
-    dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches)
-else:
-    dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches,new_shape=None)
+training_generator = data.Generator_Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, batch_size=100)
+
 # (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
-train_patches = []
-train_labels = []
-valid_patches = []
-valid_labels = []
-import pdb; pdb.set_trace()
-training_idcs = set(np.random.choice(np.arange(len(dataset.patches)),int(args.train_percent*len(dataset.patches)),replace=False))
 
-
-num_pos = 0
-for i in np.arange(len(dataset.patches)):
-    if i in training_idcs:
-        train_patches.append(dataset.patches[i])
-        train_labels.append(dataset.labels[i])
-        # print(dataset.labels[i][1])
-        if dataset.labels[i][1] == 1:
-            num_pos += 1
-    else:
-        valid_patches.append(dataset.patches[i])
-        valid_labels.append(dataset.labels[i])
-
-# import pdb; pdb.set_trace()
-print('POS PERCENT ', num_pos/len(train_patches))
-# REMOVE ONLY FOR TESTING
-# valid_patches = valid_patches[0:100]
-# valid_labels = valid_labels[0:100]
 
 print('\n=== Initiating Model ===\n')
 
@@ -109,11 +83,11 @@ if args.load_model is not None:
     model = load_model(args.load_model)
 else:
     if args.type == 'vgg19':
-        model = vgg19.vgg(dataset.input_shape, args.num_classes)
+        model = vgg19.vgg(training_generator.input_shape, args.num_classes)
     elif args.type == 'resnet50':
-        model = resnet50.resnet(dataset.input_shape, args.num_classes)
+        model = resnet50.resnet(training_generator.input_shape, args.num_classes)
     elif args.type == 'pvgg19':
-        model = pvgg19.patch_vgg(dataset.input_shape, args.num_classes)
+        model = pvgg19.patch_vgg(training_generator.input_shape, args.num_classes)
 
 model.summary()
 
@@ -135,13 +109,8 @@ try:
     if not args.only_test:
         print('\n=== Training Model ===\n')
         # training the model
-        if len(valid_patches) > 0:
-            print('With validation')
-            import pdb; pdb.set_trace()
-            history = model.fit(np.array(train_patches), np.array(train_labels), validation_data=(np.array(valid_patches), np.array(valid_labels)), epochs=args.num_epochs, batch_size=100)
-        else:
-            print('Without validation')
-            history = model.fit(train_patches, train_labels, epochs=args.num_epochs)
+        model.fit_generator(generator=training_generator,
+                            steps_per_epoch=len(training_generator))
 
         print('\n=== Saving Model ===\n')
 
