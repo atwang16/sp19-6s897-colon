@@ -850,8 +850,9 @@ class Dataset_Rotated:
         print('NEG EXAMPLES',len(neg_patches))
 
         patches = np.vstack((pos_patches,neg_patches))
-
+        print('LEN LABELS',len(labels))
         labels = [[0,1]]*len(pos_patches) + [[1,0]]*len(neg_patches)
+        print('len labels',len(labels))
         return np.array(pos_patches), np.array(labels)
 
     # assuming they all have the same (or similar names) and are alphabetical
@@ -870,9 +871,11 @@ class Dataset_Rotated:
             original_name = self.original_image_location +'/' + original_image_files[i]
             #import pdb; pdb.set_trace()
             if random:
+                print('RAND')
                 current_patches, current_labels = self.image_to_random_patches(original_name, ground_truth_name, num_patches, new_shape)
 
             else:
+                print('SEQ')
                 current_patches, current_labels = self.image_to_sequential_patches(original_name, ground_truth_name, new_shape)
 
             print('SINGLE IMG')
