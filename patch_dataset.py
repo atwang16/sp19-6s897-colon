@@ -597,6 +597,7 @@ class Dataset_Rotated:
         self.patches, self.labels = self.process_images(random=random, num_patches = num_patches, new_shape=new_shape)
 
     def normalize_vector(self,mat):
+        import pdb; pdb.set_trace()
         mean = np.mean(mat)
         std = np.std(mat)
         return (mat - mean) / std
