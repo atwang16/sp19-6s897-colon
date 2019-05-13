@@ -31,6 +31,7 @@ class Dataset:
 
         self.X_train, self.y_train, self.X_val, self.y_val = self.load_images("train", format, percent=self.train_val_split)
         self.X_test, self.y_test = self.load_images("test", format)
+        self.format = format
 
     @staticmethod
     def normalize(mat):

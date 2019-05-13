@@ -44,6 +44,12 @@ def get_model(typ, input_shape, pretrained_weights):
     return model, loss
 
 
+def abs_error(y_true, y_pred):
+    y_true = K.sum(y_true)
+    y_pred = K.sum(y_pred)
+    return K.abs(y_true-y_pred)
+
+
 if __name__ == '__main__':
     # Loading arguments
     parser = argparse.ArgumentParser(description='Polyp Detecting Model')
@@ -104,22 +110,23 @@ if __name__ == '__main__':
     logging = TensorBoard(log_dir=args.output_dir)
     checkpoint_name = '%s_model.{epoch:03d}.h5' % args.type
     checkpoint = ModelCheckpoint(filepath=os.path.join(args.output_dir, checkpoint_name),
-                                 monitor='val_loss',
+                                 monitor='val_abs_error',
                                  verbose=1,
                                  save_best_only=True,
+                                 save_weights_only=True,
                                  mode='min')
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
-    early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1**0.5, patience=12, verbose=1)
+    # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
 
-    callbacks = [logging, checkpoint, reduce_lr, early_stopping]
+    callbacks = [logging, checkpoint, reduce_lr]
 
     # optimizer
     adam = optimizers.Adam(lr=args.lr)  # beta_1=0.9, beta_2=0.999, decay=0.0
 
     if args.type == "yolov3":
-        model.compile(optimizer=adam, loss=loss_function)
+        model.compile(optimizer=adam, loss=loss_function, metrics=[abs_error])
     else:
-        model.compile(optimizer=adam, loss=loss_function, metrics=[evaluate.rmse, evaluate.get_dice_score(localization_format)])
+        model.compile(optimizer=adam, loss=loss_function, metrics=[evaluate.rmse, evaluate.get_dice_score(localization_format), abs_error])
 
     print('\n=== Training Model ===\n')
 
@@ -136,66 +143,24 @@ if __name__ == '__main__':
                       initial_epoch=initial_epoch,
                       batch_size=args.batch_size,
                       callbacks=[logging, checkpoint])
-            model.save(os.path.join(args.output_dir, f"{model_name}_initial.h5"))
+            model.save_weights(os.path.join(args.output_dir, f"{model_name}_initial.h5"))
             initial_epoch += epochs_to_train
 
             for i in range(len(model.layers)):
                 model.layers[i].trainable = True
             model.compile(optimizer=optimizers.Adam(lr=args.lr),
-                          loss=loss_function)  # recompile to apply the change
-        else:
-            epochs_to_train = 0
+                          loss=loss_function, metrics=[abs_error])  # recompile to apply the change
         # train model
         print("= Regular Training =")
         model.fit(dataset.X_train, dataset.y_train,
                   validation_data=(dataset.X_val, dataset.y_val),
-                  epochs=args.num_epochs - epochs_to_train,
+                  epochs=args.num_epochs,
                   initial_epoch=initial_epoch,
                   batch_size=args.batch_size,
                   callbacks=callbacks)
 
         print('\n=== Saving Model ===\n')
-        model.save(os.path.join(args.output_dir, f"{model_name}_final.h5"))
-
-        # print('\n=== Evaluating Model ===\n')
-        #
-        # if history is not None:
-        #     print(history.history)
-        #     plt.plot(history.history['loss'])
-        #     plt.plot(history.history['val_loss'])
-        #     plt.title('Model Loss')
-        #     plt.ylabel('Loss')
-        #     plt.xlabel('Epoch')
-        #     plt.legend(['Train', 'Validation'], loc='upper left')
-        #     plt.savefig(os.path.join(args.output_dir, 'loss_over_epochs.png'))
-        #     plt.close()
-        #
-        #     dice_score = None
-        #     if "dice_score_box" in history.history:
-        #         dice_score = "dice_score_box"
-        #     elif "dice_score_center" in history.history:
-        #         dice_score = "dice_score_center"
-        #
-        #     if dice_score is not None:
-        #         plt.plot(history.history[dice_score])
-        #         plt.plot(history.history[f"val_{dice_score}"])
-        #         plt.title('Model Dice Score')
-        #         plt.ylabel('Dice Score')
-        #         plt.xlabel('Epoch')
-        #         plt.legend(['Train','Validation'],loc='upper left')
-        #         plt.savefig(os.path.join(args.output_dir, 'dice_over_epochs.png'))
-        #         plt.close()
-        #
-        #     plt.plot(history.history["rmse"])
-        #     plt.plot(history.history["val_rmse"])
-        #     plt.title('Model rMSE')
-        #     plt.ylabel('rMSE')
-        #     plt.xlabel('Epoch')
-        #     plt.legend(['Train','Validation'],loc='upper left')
-        #     plt.savefig(os.path.join(args.output_dir, 'rmse_over_epochs.png'))
-        #     plt.close()
-
-        # TODO: evaluate
+        model.save_weights(os.path.join(args.output_dir, f"{model_name}_final.h5"))
 
         early_stop = False
 
