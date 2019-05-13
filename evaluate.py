@@ -106,9 +106,6 @@ def evaluate(model, dataset, split, typ):
         y_pred = model.predict(X)
     assert y.shape == y_pred.shape
 
-    print(y)
-    print(y_pred)
-
     score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
     return y_pred, score
 
@@ -133,7 +130,6 @@ def visualize(save_dir, dataset, predictions, num_to_generate=None):
 
     for i in range(len(X)):
         img = X[i]
-        print(img)
 
         # Create figure and axes
         fig, ax = plt.subplots(1)
