@@ -8,17 +8,17 @@ import imutils
 import keras
 
 class Dataset:
-    def __init__(self, patch_size, original_images, ground_truth, random=True, num_patches = 1000, new_shape=(224,224)):
+    def __init__(self, patch_size, original_images, ground_truth, random=False, num_patches = 1000, new_shape=None):
         self.patch_size = patch_size
         self.input_shape = (patch_size,patch_size,3)
         self.original_image_location = original_images
         self.ground_truth_location = ground_truth
 
-        self.patches, self.labels = self.process_images(random=random, num_patches = num_patches, new_shape=new_shape)
-
     def normalize_vector(self,mat):
-        norm_factor = np.max(mat)
-        return mat/norm_factor
+        #import pdb; pdb.set_trace()
+        mean = np.mean(mat)
+        std = np.std(mat)
+        return (mat - mean) / std
 
     def image_to_random_patches(self, original_image, ground_truth, num_patches = 1000, new_shape = (224,224)):
         def x_trunc(x_val):
@@ -82,7 +82,7 @@ class Dataset:
 
         return np.array(patches), np.array(labels)
 
-    def image_to_sequential_patches(self, original_image, ground_truth, new_shape = (224,224)):
+    def image_to_sequential_patches(self, original_image, ground_truth, new_shape = None):
 
         ground_truth_img = cv2.imread(ground_truth,0)
         if new_shape is not None:
@@ -129,7 +129,7 @@ class Dataset:
 
                 patch_array = np.array(ground_truth_patch)
                 mean_patch_value = patch_array.mean()
-                if mean_patch_value >= 0.5:
+                if mean_patch_value >= 0.75:
                     label = 1
                 else:
                     label = 0
@@ -139,7 +139,7 @@ class Dataset:
                 class_probs = [0,0]
                 class_probs[label] = 1
                 labels.append(np.array(class_probs))
-        return np.array(patches), np.array(labels)
+        return patches, labels
 
     # assuming they all have the same (or similar names) and are alphabetical
     def process_images(self, random = True, num_patches = 1000, new_shape=(224,224)):
@@ -1201,107 +1201,3 @@ class Generator_Dataset_Rotated(keras.utils.Sequence):
         # print('PROCES IMGAES')
         # import pdb; pdb.set_trace()
         return patches, labels
-
-    def split_data(self, train_percent = 0.1, validation_percent = 0.2, balance_classes=False):
-
-        class_patches = self.patches.copy()
-        class_labels = self.labels.copy()
-
-        if train_percent + validation_percent >= 1:
-            # raise ValueError
-            return None
-
-        if balance_classes:
-
-            pos_idcs = np.where(self.labels[:,1] == 1)[0]
-            # num_neg = total_patches - pos_patches
-            # class_difference = num_neg - pos_paches
-            # class_difference = total_patches - 2*pos_paches
-
-            train_number = int(len(pos_idcs)*train_percent)
-            valid_number = int(len(pos_idcs)*validation_percent)
-
-            # getting relevant idexes from oversample
-            train_pos_idcs = np.random.choice(range(len(pos_idcs)), train_number, replace=False)
-
-            pos_remaining_indices = set(range(len(pos_idcs))).difference(set(train_pos_idcs))
-
-            valid_pos_idcs = np.random.choice(list(pos_remaining_indices), valid_number, replace=False)
-
-            pos_remaining_indices = pos_remaining_indices.difference(set(valid_pos_idcs))
-
-            test_pos_idcs = np.array(list(pos_remaining_indices))
-
-            # getting real indices
-            train_pos_idcs = pos_idcs[train_pos_idcs]
-            valid_pos_idcs = pos_idcs[valid_pos_idcs]
-            test_pos_idcs = pos_idcs[test_pos_idcs]
-
-            negative_idcs = np.where(class_labels[:,1] == 0)[0]
-
-            train_neg_idcs = np.random.choice(negative_idcs, train_number, replace=False)
-
-            neg_remaining_indices = set(negative_idcs).difference(set(train_neg_idcs))
-
-            valid_neg_idcs = np.random.choice(list(neg_remaining_indices), valid_number, replace=False)
-
-            neg_remaining_indices = neg_remaining_indices.difference(set(valid_neg_idcs))
-
-            test_neg_idcs = np.array(list(neg_remaining_indices))
-
-
-            training_indices = np.concatenate((train_pos_idcs,train_neg_idcs))
-            valid_indices = np.concatenate((valid_pos_idcs,valid_neg_idcs))
-            test_indices = np.concatenate((test_pos_idcs,test_neg_idcs))
-
-            train_patches = []
-            for idx in training_indices:
-                angle = 0*np.random.rand(1).item()
-                rotated = imutils.rotate(class_patches[idx], angle)
-                train_patches.append(np.array(rotated))
-            train_labels = class_labels[training_indices]
-
-            valid_patches = []
-            for idx in valid_indices:
-                angle = 360*np.random.rand(1).item()
-                rotated = imutils.rotate(class_patches[idx], angle)
-                valid_patches.append(np.array(rotated))
-            valid_labels = class_labels[valid_indices]
-
-            test_patches = []
-            for idx in test_indices:
-                angle = 360*np.random.rand(1).item()
-                rotated = imutils.rotate(class_patches[idx], angle)
-                test_patches.append(np.array(rotated))
-            test_labels = class_labels[test_indices]
-
-        else:
-            train_number = int(len(class_patches)*train_percent)
-            valid_number = int(len(class_patches)*validation_percent)
-
-            training_indices = np.random.choice(np.arange(len(class_patches)), train_number, replace=False)
-
-            remaining_indices = set(np.arange(len(class_patches))).difference(set(training_indices))
-
-            valid_indices = np.random.choice(list(remaining_indices), valid_number, replace=False)
-
-            remaining_indices = remaining_indices.difference(set(valid_indices))
-
-            test_indices = np.array(list(remaining_indices))
-
-            train_patches = []
-            for idx in training_indices:
-                train_patches.append(np.array(class_patches[idx]))
-            train_labels = class_labels[training_indices]
-
-            valid_patches = []
-            for idx in valid_indices:
-                valid_patches.append(np.array(class_patches[idx]))
-            valid_labels = class_labels[valid_indices]
-
-            test_patches = []
-            for idx in test_indices:
-                test_patches.append(np.array(class_patches[idx]))
-            test_labels = class_labels[test_indices]
-
-        return (np.array(train_patches), np.array(train_labels)), (np.array(valid_patches), np.array(valid_labels)), (np.array(test_patches), np.array(test_labels))
