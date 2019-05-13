@@ -14,8 +14,6 @@ class Dataset:
         self.original_image_location = original_images
         self.ground_truth_location = ground_truth
 
-        self.patches, self.labels = self.process_images(random=random, num_patches = num_patches, new_shape=new_shape)
-
     def normalize_vector(self,mat):
         #import pdb; pdb.set_trace()
         mean = np.mean(mat)
