@@ -59,14 +59,14 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
         false_negative_patches = 0
 
         pos_predictions = 0
-        for i in range(0,len(img_patches),batch_size):
-            batch_img_patches = np.array(img_patches[i:i+batch_size])
-            batch_img_labels = np.array(img_labels[i:i+batch_size])
+        for batch_idx in range(0,len(img_patches),batch_size):
+            batch_img_patches = np.array(img_patches[batch_idx:batch_idx+batch_size])
+            batch_img_labels = np.array(img_labels[batch_idx:batch_idx+batch_size])
 
             predictions = model.predict(np.array(batch_img_patches))
 
-            false_positive_patches = np.sum(batch_img_labels[:,1] - predictions[:,1] < 0)
-            false_negative_patches = np.sum(batch_img_labels[:,1] - predictions[:,1] > 0)
+            false_positive_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] < 0)
+            false_negative_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] > 0)
 
             pos_predictions += np.sum(predictions)
 
@@ -83,11 +83,12 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
             img_label = 0
         # print(i, img_label, 'F+',false_positive_patches, 'F-',false_negative_patches)
         predicted_labels.append(img_label)
+        
     print('Threshold',threshold)
 
     print('Full Image False Negative Rate', (len(predicted_labels) - np.sum(predicted_labels))/len(predicted_labels))
 
     print('Full Dataset F+',avg_fp)
     print('Full Dataset F-',avg_fn)
-
-    print('AUC',skm.auc(np.ones(len(ground_truth_files)),predicted_labels))
+    import pdb; pdb.set_trace()
+    # print('AUC',skm.roc_auc_score(np.ones(len(predicted_labels)),predicted_labels))
