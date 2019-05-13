@@ -95,6 +95,8 @@ else:
         model = resnet50.resnet(training_generator.input_shape, args.num_classes)
     elif args.type == 'pvgg19':
         model = pvgg19.patch_vgg(training_generator.input_shape, args.num_classes)
+    elif args.type == 'pvgg19-pretrained':
+        model = pvgg19.patch_vgg_pretrained(training_generator.input_shape, args.num_classes)
 
 model.summary()
 
