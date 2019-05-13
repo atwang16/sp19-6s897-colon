@@ -2,6 +2,10 @@
 
 
  # python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches False --lr 0.001 --output_dir PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/ --type pvgg19 --model_name model --loss categorical_crossentropy --training_images data/segmentation/train/polyps/ --ground_truth data/segmentation/train/segmentations
+
+
+# python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches False --lr 0.001 --output_dir PATCH_balanced_resnet50_lr_001_trP_70_vP_10/ --type resnet50 --model_name model --loss categorical_crossentropy --training_images data/segmentation/train/polyps/ --ground_truth data/segmentation/train/segmentations
+
 from keras import backend as K
 
 # importing model file
@@ -46,6 +50,7 @@ parser.add_argument('--loss', type=str, default='binary_crossentropy', help='Los
 parser.add_argument('--num_classes', type=int, default=2, help='Number of classes to separate the data into')
 parser.add_argument('--patch_size', type=int, default=32, help='Number of pixels per side in the patch')
 parser.add_argument('--num_patches', type=int, default=1, help='Number of patches generated per image')
+parser.add_argument('--batch_size', type=int, default=1000, help='Number of batches')
 parser.add_argument('--resize_imgs', type=bool, default=False, help='Flag that will resize the images to (224,224) if True')
 parser.add_argument('--type', type=str, default='vgg19', help='Determines which convolutional model to use. Valid options are {vgg19|resnet50|pvgg19}')
 
@@ -74,7 +79,7 @@ sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 
 print('\n=== Setting Up Data ===\n')
 
-training_generator = data.Generator_Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, batch_size=100)
+training_generator = data.Generator_Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, batch_size=args.batch_size)
 
 # (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
 
