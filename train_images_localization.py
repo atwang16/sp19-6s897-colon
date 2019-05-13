@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
         initial_epoch = 0
         if args.type == "yolov3":  # freeze train
-            epochs_to_train = max(1, min(25, args.num_epochs // 2))
+            epochs_to_train = max(1, min(8, args.num_epochs // 2))
             model.fit(dataset.X_train, dataset.y_train,
                       validation_data=(dataset.X_val, dataset.y_val),
                       epochs=epochs_to_train,
