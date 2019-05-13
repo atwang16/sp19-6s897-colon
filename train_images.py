@@ -76,7 +76,6 @@ if args.resize_imgs:
     dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches)
 else:
     dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches,new_shape=None)
-import pdb; pdb.set_trace()
 # (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
 
 train_patches = dataset.patches[:int(args.train_percent*len(dataset.patches))]
@@ -84,6 +83,8 @@ train_labels = dataset.labels[:int(args.train_percent*len(dataset.patches))]
 
 valid_patches = dataset.patches[int(args.train_percent*len(dataset.patches)):]
 valid_labels = dataset.labels[int(args.train_percent*len(dataset.patches)):]
+
+import pdb; pdb.set_trace()
 
 print('Positive Percent ::',sum(train_labels[:,1])/len(train_labels))
 
