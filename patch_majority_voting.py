@@ -10,6 +10,9 @@ import argparse
 
 import os
 
+from keras import backend as K
+
+
 parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
 # data location
 parser.add_argument('--images', type=str, default='ETIS-LaribPolypDB/ETIS-LaribPolypDB/', help='folder that contains all images that the model will be trained on')
@@ -19,6 +22,12 @@ parser.add_argument('--patch_size', type=int, default=32, help='Number of pixels
 parser.add_argument('--batch_size', type=int, default=1, help='Number of pixels per side in the patch')
 
 parser.add_argument('--load_model', type=str, default=None, help='Name of a model that will be loaded')
+
+gpu_devices = K.tensorflow_backend._get_available_gpus()
+print("GPU devices: ",gpu_devices)
+print("----------------")
+import tensorflow as tf
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 
 args = parser.parse_args()
 
