@@ -46,7 +46,7 @@ def train_model_from_dir(
 
     tensorboard = TensorBoard(histogram_freq=0, write_graph=True, write_images=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.00001)
-    early_stop = EarlyStopping(monitor='val_loss', patience=50, restore_best_weights=True)
+    early_stop = EarlyStopping(monitor='val_loss', patience=50)
     checkpoint = ModelCheckpoint(join(MODEL_DIR,'model.h5'), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     
     history = model.fit_generator(

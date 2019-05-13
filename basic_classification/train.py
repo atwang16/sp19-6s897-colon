@@ -9,7 +9,6 @@ import tensorflow as tf
 
 from keras import optimizers
 from keras.models import load_model
-from roc_callback import auc_metric
 
 import argparse
 from keras import backend as K
@@ -64,7 +63,7 @@ else: # default model VGG19
 print('\n=== Compiling Model ===\n')
 
 adam = optimizers.Adam(lr=args.lr)
-model.compile(optimizer=adam, loss=args.loss, metrics=['accuracy', auc_metric])
+model.compile(optimizer=adam, loss=args.loss, metrics=['accuracy'])
 
 
 print('\n=== Training Model ===\n')
