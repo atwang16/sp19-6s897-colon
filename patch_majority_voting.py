@@ -1,6 +1,9 @@
 import sklearn.metrics as skm
 import numpy as np
 
+import patch_dataset as data
+
+
 import argparse
 
 parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
