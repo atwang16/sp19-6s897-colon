@@ -846,8 +846,8 @@ class Dataset_Rotated:
             pos_patches = np.array(pos_patches)[random_pos_ids]
             neg_patches = np.array(neg_patches)
 
-        print('POS EXAMPLES',len(pos_patches))
-        print('NEG EXAMPLES',len(neg_patches))
+        # print('POS EXAMPLES',len(pos_patches))
+        # print('NEG EXAMPLES',len(neg_patches))
 
         patches = np.vstack((pos_patches,neg_patches))
         # print('LEN LABELS',len(labels))
@@ -867,23 +867,23 @@ class Dataset_Rotated:
         labels = []
 
         for i in range(len(ground_truth_files)):
-            print(i)
+            # print(i)
             ground_truth_name = self.ground_truth_location+'/' + ground_truth_files[i]
             original_name = self.original_image_location +'/' + original_image_files[i]
             #import pdb; pdb.set_trace()
             if random:
-                print('RAND')
+                # print('RAND')
                 current_patches, current_labels = self.image_to_random_patches(original_name, ground_truth_name, num_patches, new_shape)
 
             else:
-                print('SEQ')
+                # print('SEQ')
                 current_patches, current_labels = self.image_to_sequential_patches(original_name, ground_truth_name, new_shape)
 
-            print('SINGLE IMG')
+            # print('SINGLE IMG')
             # import pdb; pdb.set_trace()
             patches.extend(current_patches)
             labels.extend(current_labels)
-        print('PROCES IMGAES')
+        # print('PROCES IMGAES')
         # import pdb; pdb.set_trace()
         return np.array(patches), np.array(labels)
 
