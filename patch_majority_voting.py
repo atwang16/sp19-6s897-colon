@@ -4,6 +4,8 @@ import numpy as np
 import patch_dataset as data
 from keras.models import load_model
 
+from roc_callback import auc_metric
+
 import argparse
 
 parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
