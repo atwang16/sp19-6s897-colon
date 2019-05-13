@@ -875,9 +875,12 @@ class Dataset_Rotated:
             else:
                 current_patches, current_labels = self.image_to_sequential_patches(original_name, ground_truth_name, new_shape)
 
+            print('SINGLE IMG')
+            import pdb; pdb.set_trace()
             patches.extend(current_patches)
             labels.extend(current_labels)
-
+        print('PROCES IMGAES')
+        import pdb; pdb.set_trace()
         return np.array(patches), np.array(labels)
 
     def split_data(self, train_percent = 0.1, validation_percent = 0.2, balance_classes=False):
