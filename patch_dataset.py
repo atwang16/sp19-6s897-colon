@@ -597,8 +597,9 @@ class Dataset_Rotated:
         self.patches, self.labels = self.process_images(random=random, num_patches = num_patches, new_shape=new_shape)
 
     def normalize_vector(self,mat):
-        norm_factor = np.max(mat)
-        return mat/norm_factor
+        mean = np.mean(mat)
+        std = np.std(mat)
+        return (mat - mean) / std
 
     def rotation(self,point,center,radians):
         sin = np.sin(radians)
@@ -665,7 +666,6 @@ class Dataset_Rotated:
 
             patch_array = np.array(ground_truth_patch)
             mean_patch_value = patch_array.mean()
-            print(mean_patch_value)
             if mean_patch_value >= 0.5:
                 label = 1
             else:
@@ -796,29 +796,29 @@ class Dataset_Rotated:
 
                 patch_array = np.array(ground_truth_patch)
                 mean_patch_value = patch_array.mean()
-                if mean_patch_value >= 0.5:
+                if mean_patch_value >= 0.75:
                     label = 1
 
-                    if UL.shape == (self.patch_size,self.patch_size,3) and UL.mean() >= 0.5:
+                    if UL.shape == (self.patch_size,self.patch_size,3):
                         pos_patches.append(UL)
 
-                    if UC.shape == (self.patch_size,self.patch_size,3) and UC.mean() >= 0.5:
+                    if UC.shape == (self.patch_size,self.patch_size,3):
                         pos_patches.append(UC)
-                    if UR.shape == (self.patch_size,self.patch_size,3) and UR.mean() >= 0.5:
+                    if UR.shape == (self.patch_size,self.patch_size,3):
                         pos_patches.append(UR)
-                    if LL.shape == (self.patch_size,self.patch_size,3) and LL.mean() >= 0.5:
+                    if LL.shape == (self.patch_size,self.patch_size,3):
                         pos_patches.append(LL)
 
-                    if LC.shape == (self.patch_size,self.patch_size,3) and LC.mean() >= 0.5:
+                    if LC.shape == (self.patch_size,self.patch_size,3):
                         pos_patches.append(LC)
 
-                    if LR.shape == (self.patch_size,self.patch_size,3) and LR.mean() >= 0.5:
+                    if LR.shape == (self.patch_size,self.patch_size,3):
                         pos_patches.append(LR)
 
-                    if CL.shape == (self.patch_size,self.patch_size,3) and CL.mean() >= 0.5:
+                    if CL.shape == (self.patch_size,self.patch_size,3):
                         pos_patches.append(CL)
 
-                    if CR.shape == (self.patch_size,self.patch_size,3) and CR.mean() >= 0.5:
+                    if CR.shape == (self.patch_size,self.patch_size,3):
                         pos_patches.append(CR)
 
                     pos_patches.append(original_image_patch)

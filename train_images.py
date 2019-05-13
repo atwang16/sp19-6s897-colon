@@ -1,10 +1,12 @@
+# python3 train_images.py --num_epochs 50 --train_percent .70 --random_patches False --lr 0.001 --output_dir balanced_medium_normed/ --type pvgg19 --model_name model
+
 # importing model file
 import models.vgg19 as vgg19
 import models.patch_vgg19 as pvgg19
 import models.resnet50 as resnet50
 
 # importing dataset file
-import dataset as data
+import patch_dataset as data
 
 from roc_callback import auc_metric
 
@@ -62,9 +64,9 @@ if not os.path.exists(args.output_dir):
 print('\n=== Setting Up Data ===\n')
 
 if args.resize_imgs:
-    dataset = data.Dataset(args.patch_size, args.training_images, args.ground_truth, random=args.random_patches, num_patches=args.num_patches)
+    dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches)
 else:
-    dataset = data.Dataset(args.patch_size, args.training_images, args.ground_truth, random=args.random_patches, num_patches=args.num_patches,new_shape=None)
+    dataset = data.Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, random=False, num_patches=args.num_patches,new_shape=None)
 
 (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
 
