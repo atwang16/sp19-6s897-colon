@@ -18,7 +18,7 @@ def convs(input, num_filters, kernel_size, stride, num_layers=1):
     x = MaxPool2D(pool_size=2)(x)
     return x
 
-def vgg19(input_shape, use_sigmoid=False):
+def vgg19(input_shape, pretrained_weights=None, use_sigmoid=False):
     inputs = Input(shape=input_shape)
 
     # convolutional layers
@@ -41,5 +41,8 @@ def vgg19(input_shape, use_sigmoid=False):
 
     # create model
     model = Model(inputs=inputs, outputs=outputs)
+
+    if pretrained_weights is not None:
+        model.load_weights(pretrained_weights)
 
     return model

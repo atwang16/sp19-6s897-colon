@@ -30,7 +30,7 @@ class Dataset:
         self.train_val_split = 0.75
 
         self.X_train, self.y_train, self.X_val, self.y_val = self.load_images("train", format, percent=self.train_val_split)
-        self.X_test, self.y_test = self.load_images("test", format)
+        self.X_test_orig, self.X_test, self.y_test = self.load_images("test", format, preserve_original=True)
         self.format = format
 
     @staticmethod
@@ -40,7 +40,7 @@ class Dataset:
         return (mat - mean) / std
 
     # assuming they all have the same (or similar names) and are alphabetical
-    def load_images(self, split, seg_format, percent=1.0):
+    def load_images(self, split, seg_format, percent=1.0, preserve_original=False):
         original_image_files = sorted((os.path.join(self.images_dir[split], "polyps", f)
                                        for f in os.listdir(os.path.join(self.images_dir[split], "polyps"))
                                        if f[0] != "."), key=natural_keys)
@@ -55,13 +55,24 @@ class Dataset:
         if percent == 0.0 or percent == 1.0:
             images = np.zeros((len(original_image_files), *self.input_shape))
             labels = np.zeros((len(original_image_files), *segmentation_shape))
+            if preserve_original:
+                original_images = [None for _ in range(len(original_image_files))]
+            else:
+                original_images = None
 
             for i, image_path in enumerate(original_image_files):
                 segmentation_path = segmentation_files[i]
-                images[i, :, :, :] = self.read_image(image_path)
+                imgs = self.read_image(image_path, preserve_original)
+                if preserve_original:
+                    original_images[i], images[i, :, :, :] = imgs
+                else:
+                    images[i, :, :, :] = imgs
                 labels[i, :] = self.read_segmentation(segmentation_path, seg_format)
 
-            return images, labels
+            if preserve_original:
+                return original_images, images, labels
+            else:
+                return images, labels
         else:
             split_1_size = int(len(original_image_files) * percent)
             split_2_size = len(original_image_files) - split_1_size
@@ -84,18 +95,21 @@ class Dataset:
 
             return images_split_1, labels_split_1, images_split_2, labels_split_2
 
-    def read_image(self, path):
+    def read_image(self, path, preserve_original=False):
         raw_image = cv2.imread(path)
         rescaled_image = cv2.resize(raw_image, self.input_shape[:2], interpolation=cv2.INTER_CUBIC)
-        return Dataset.normalize(np.array(rescaled_image))
+        if preserve_original:
+            return rescaled_image, Dataset.normalize(np.array(rescaled_image))
+        else:
+            return Dataset.normalize(np.array(rescaled_image))
 
     @staticmethod
     def get_bounds(img):
         nonzeros = np.nonzero(img)
-        x_min = nonzeros[0][0]
-        x_max = nonzeros[0][-1]
-        y_min = np.min(nonzeros[1])
-        y_max = np.max(nonzeros[1])
+        y_min = nonzeros[0][0]
+        y_max = nonzeros[0][-1]
+        x_min = np.min(nonzeros[1])
+        x_max = np.max(nonzeros[1])
         return x_min, y_min, x_max, y_max
 
     def read_segmentation(self, path, format):
