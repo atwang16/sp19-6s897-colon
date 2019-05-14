@@ -65,10 +65,10 @@ def get_dice_score(fmt):
         intersection_x_max = mn(y_true[:, 2], y_pred[:, 2])
         intersection_y_max = mn(y_true[:, 3], y_pred[:, 3])
 
-        intersection_area = mx(0.0, intersection_x_max - intersection_x_min + 1) * \
-                            mx(0.0, intersection_y_max - intersection_y_min + 1)
-        true_area = (y_true[:, 2] - y_true[:, 0] + 1) * (y_true[:, 3] - y_true[:, 1] + 1)
-        pred_area = (y_pred[:, 2] - y_pred[:, 0] + 1) * (y_pred[:, 3] - y_pred[:, 1] + 1)
+        intersection_area = mx(0.0, intersection_x_max - intersection_x_min + 1e-10) * \
+                            mx(0.0, intersection_y_max - intersection_y_min + 1e-10)
+        true_area = (y_true[:, 2] - y_true[:, 0] + 1e-10) * (y_true[:, 3] - y_true[:, 1] + 1e-10)
+        pred_area = (y_pred[:, 2] - y_pred[:, 0] + 1e-10) * (y_pred[:, 3] - y_pred[:, 1] + 1e-10)
         total_area = true_area + pred_area
 
         return 2 * mean(intersection_area / total_area)
@@ -124,7 +124,8 @@ def evaluate(model, dataset, split, typ):
     print(y_pred)
 
     score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
-    return y_pred, score
+    distr = [get_dice_score(dataset.format)(y[np.newaxis, i, :], y_pred[np.newaxis, i, :], is_tf_metric=False) for i in range(y.shape[0])]
+    return y_pred, score, distr
 
 
 def visualize(save_dir, dataset, predictions, num_to_generate=None):
@@ -229,11 +230,20 @@ if __name__ == '__main__':
         model = None
 
     print('\n=== Evaluating Model ===\n')
-    val_predictions, val_dice_score = evaluate(model, dataset, "val", args.type)
-    test_predictions, test_dice_score = evaluate(model, dataset, "test", args.type)
+    val_predictions, val_dice_score, val_dist = evaluate(model, dataset, "val", args.type)
+    test_predictions, test_dice_score, test_dist = evaluate(model, dataset, "test", args.type)
 
     print(f"Val dice score = {val_dice_score}")
     print(f"Test dice score = {test_dice_score}")
+
+    fig, ax = plt.subplots(1)
+
+    # Display the image
+    bins = np.linspace(0.0, 1.0, 25)
+    ax.hist([val_dist, test_dist], bins, label=["val_dice_score", "test_dice_score"])
+    ax.legend(loc='upper right')
+    fig.savefig(os.path.join(args.save_dir, f"dice_score_dist.png"), bbox_inches=0)
+    plt.close(fig)
 
     print("\n=== Visualizing Model ===\n")
     visualize(args.save_dir, dataset, test_predictions, num_to_generate=args.visualize)
