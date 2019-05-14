@@ -40,8 +40,8 @@ args.load_model = '/'.join([args.base_path, args.load_model])
 
 print('\n=== Setting Up Data ===\n')
 
-test_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
-test_generator = test_datagen.flow_from_directory(test_path, target_size=(224, 224), batch_size=batch_size, class_mode='binary')
+test_datagen = ImageDataGenerator(preprocessing_function=preprocessing_func)
+test_generator = test_datagen.flow_from_directory(args.test_path, target_size=(224, 224), batch_size=args.batch_size, class_mode='binary')
 
 print('\n=== Initiating Model ===\n')
 
