@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
 import cv2
+from keras.losses import mean_squared_error
 
 IMAGES_DIR = "data/segmentation"
 NORMALIZE_LABELS = True
@@ -35,7 +36,7 @@ def get_model(typ, input_shape, pretrained_weights):
         model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
-        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
+        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
         loss = "mean_squared_error"
     elif typ == "yolov3":
         model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
@@ -102,6 +103,13 @@ def dice_score_center_loss(y_true, y_pred):
     return 1 - get_dice_score(LocFormat.CENTER)(y_true, y_pred, is_tf_metric=True)
 
 
+def small_bounding_box_loss(y_true, y_pred):
+    mse = mean_squared_error(y_true, y_pred)
+    pred_area = (y_pred[:, 2] - y_pred[:, 0]) * (y_pred[:, 3] - y_pred[:, 1])
+    large_bb = K.sum(pred_area)
+    return mse + 1 * large_bb
+
+
 def evaluate(model, dataset, split, typ):
     X = dataset.__getattribute__(f"X_{split}")
     y = dataset.__getattribute__(f"y_{split}")
@@ -113,6 +121,7 @@ def evaluate(model, dataset, split, typ):
     else:
         y_pred = model.predict(X)
     assert y.shape == y_pred.shape
+    print(y_pred)
 
     score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
     return y_pred, score
