@@ -40,7 +40,7 @@ def get_model(typ, input_shape, pretrained_weights):
         model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
-        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
+        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == "yolov3":
         model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     if args.type == "yolov3":
         dataset = data.YoloDataset(IMAGES_DIR, yolo.get_anchors(yolo.ANCHOR_PATH))
     else:  # resnet, vgg
-        dataset = data.Dataset(IMAGES_DIR, format=get_localization_format(args.type))
+        dataset = data.Dataset(IMAGES_DIR, format=get_localization_format(args.type), normalize_labels=True)
 
     print('\n=== Initiating Model ===\n')
 

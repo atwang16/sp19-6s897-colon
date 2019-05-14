@@ -21,7 +21,7 @@ class LocFormat(Enum):
     SEGMENTATION = 2
 
 class Dataset:
-    def __init__(self, data_path, new_shape=(224,224), format=LocFormat.BOX):
+    def __init__(self, data_path, new_shape=(224,224), format=LocFormat.BOX, normalize_labels=False):
         self.input_shape = (*new_shape, 3)
         self.images_dir = {
             "train": os.path.join(data_path, "train"),
@@ -32,6 +32,7 @@ class Dataset:
         self.X_train, self.y_train, self.X_val, self.y_val = self.load_images("train", format, percent=self.train_val_split)
         self.X_test_orig, self.X_test, self.y_test = self.load_images("test", format, preserve_original=True)
         self.format = format
+        self.normalize_labels = normalize_labels
 
     @staticmethod
     def normalize(mat):
@@ -103,13 +104,19 @@ class Dataset:
         else:
             return Dataset.normalize(np.array(rescaled_image))
 
-    @staticmethod
-    def get_bounds(img):
+    def get_bounds(self, img):
         nonzeros = np.nonzero(img)
         y_min = nonzeros[0][0]
         y_max = nonzeros[0][-1]
         x_min = np.min(nonzeros[1])
         x_max = np.max(nonzeros[1])
+
+        if self.normalize_labels:
+            x_min /= self.input_shape[0]
+            x_max /= self.input_shape[0]
+            y_min /= self.input_shape[1]
+            y_max /= self.input_shape[1]
+
         return x_min, y_min, x_max, y_max
 
     def read_segmentation(self, path, format):

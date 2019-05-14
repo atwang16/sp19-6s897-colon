@@ -20,7 +20,7 @@ IMAGES_DIR = "data/segmentation"
 
 
 def get_localization_format(typ):
-    if typ in {"yolov3", "resnet50"}:
+    if typ in {"yolov3", "resnet50", "baseline"}:
         return data.LocFormat.BOX
     elif typ in {"vgg19"}:
         return data.LocFormat.CENTER
@@ -30,14 +30,17 @@ def get_localization_format(typ):
 
 def get_model(typ, input_shape, pretrained_weights):
     if typ == 'vgg19':
-        model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
+        model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
         model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
         loss = "mean_squared_error"
     elif typ == "yolov3":
-        model = yolo.YOLO(model_image_size=input_shape, model_path=pretrained_weights)
-        loss = None
+        model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
+        loss = {'yolo_loss': lambda y_true, y_pred: y_pred}
+    elif typ == "baseline":
+        model = baseline.baseline(input_shape)
+        loss = "mean_squared_error"
     else:
         raise ValueError(f"Model \"{typ}\" not supported.")
     return model, loss
@@ -106,12 +109,13 @@ def evaluate(model, dataset, split, typ):
 
     if typ == "yolov3":
         y_pred = model.evaluate_on_image(X)
+    elif typ == "baseline":
+        y_pred = np.array([[0, 0, dataset.input_shape[0], dataset.input_shape[1]] for _ in range(y.shape[0])])
     else:
         y_pred = model.predict(X)
     assert y.shape == y_pred.shape
 
     score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
-    # score = 0
     return y_pred, score
 
 
@@ -164,7 +168,7 @@ if __name__ == '__main__':
     # Model hyperparameters
     parser.add_argument('--type', type=str, default='vgg19',
                         help='Determines which convolutional model to use. Valid options are {vgg19|resnet50|pvgg19}')
-    parser.add_argument('--load_model', type=str, help='Name of a model that will be loaded', required=True)
+    parser.add_argument('--load_model', type=str, help='Name of a model that will be loaded')
     parser.add_argument('--save_dir', type=str, help='Directory in which to save visualizations', required=True)
     parser.add_argument('--visualize', type=int, help='Number of images to visualize', default=None)
 
@@ -189,20 +193,22 @@ if __name__ == '__main__':
     dataset = data.Dataset(IMAGES_DIR, format=get_localization_format(args.type))
 
     print('\n=== Initiating Model ===\n')
+    if args.type != "baseline":
+        model, loss_function = get_model(args.type, dataset.input_shape, pretrained_weights=args.load_model)
+        localization_format = get_localization_format(args.type)
 
-    model, loss_function = get_model(args.type, dataset.input_shape, pretrained_weights=args.load_model)
-    localization_format = get_localization_format(args.type)
+        if args.type != "yolov3":
+            model.summary()
 
-    if args.type != "yolov3":
-        model.summary()
+        print('\n=== Compiling Model ===\n')
 
-    print('\n=== Compiling Model ===\n')
+        # optimizer
+        adam = optimizers.Adam(lr=0.0)  # beta_1=0.9, beta_2=0.999, decay=0.0
 
-    # optimizer
-    adam = optimizers.Adam(lr=0.0)  # beta_1=0.9, beta_2=0.999, decay=0.0
-
-    if args.type != "yolov3":
-        model.compile(optimizer=adam, loss=loss_function)
+        if args.type != "yolov3":
+            model.compile(optimizer=adam, loss=loss_function)
+    else:
+        model = None
 
     print('\n=== Evaluating Model ===\n')
     val_predictions, val_dice_score = evaluate(model, dataset, "val", args.type)

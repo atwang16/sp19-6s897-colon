@@ -29,15 +29,15 @@ def vgg19(input_shape, pretrained_weights=None, use_sigmoid=False):
     # x = convs(x, num_filters=512, kernel_size=3, stride=1, num_layers=4)
     # x = convs(x, num_filters=512, kernel_size=3, stride=1, num_layers=4)
 
-    base_model = VGG19(weights='imagenet')
+    base_model = VGG19(weights='imagenet', include_top=False)
     inputs = base_model.inputs
     x = base_model.output
 
     # fully connected layers
     x = GlobalAveragePooling2D()(x)
     # x = Flatten(name="flatten")(x)
-    x = Dense(1560, activation="relu")(x)
-    x = Dense(1560, activation="relu")(x)
+    x = Dense(1024, activation="relu")(x)
+    # x = Dense(1560, activation="relu")(x)
     if use_sigmoid:
         assert input_shape[0] == input_shape[1], "Currently only support equal width and height"
         outputs = Dense(4, activation="sigmoid")(x)

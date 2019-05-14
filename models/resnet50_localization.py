@@ -73,7 +73,7 @@ def resnet(input_shape, layers, pretrained_weights=None, use_sigmoid=False):
     if use_sigmoid:
         assert input_shape[0] == input_shape[1], "Currently only support equal width and height"
         outputs = Dense(4, activation="sigmoid")(x)
-        outputs = keras.layers.Lambda(lambda x: x * input_shape[0])(outputs)
+        # outputs = keras.layers.Lambda(lambda x: x * input_shape[0])(outputs)
     else:
         outputs = Dense(4, activation="linear", kernel_initializer="he_normal")(x)
 
