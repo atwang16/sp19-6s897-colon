@@ -15,7 +15,7 @@ from keras import backend as K
 import tensorflow as tf
 
 
-#python3 patch_majority_voting.py --images data/segmentation/test/polyps/ --ground_truth data/segmentation/test/segmentations/ --load_model PATCH_class_0001/model_early_stop.h5
+#python3 patch_majority_voting.py --images data/segmentation/test/polyps/ --ground_truth data/segmentation/test/segmentations/ --load_model
 
 parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
 # data location
@@ -65,6 +65,7 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
         img_patches, img_labels = dataset.image_to_sequential_patches(original_name, ground_truth_name)
 
+        all_predictions = []
         batch_size = 100
         false_positive_patches = 0
         false_negative_patches = 0
@@ -73,9 +74,10 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
         ppv = 0
         auc = 0
 
-        dice_score = 0
+        true_positives = 0
+        true_negatives = 0
 
-        avg_auc
+        dice_score = 0
 
         pos_predictions = 0
         for batch_idx in range(0,len(img_patches),batch_size):
@@ -88,33 +90,35 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
             false_negative_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] > 0)
 
             # true negatives
-            npv += np.sum(batch_img_labels[:,0] * predictions[:,0])
+            true_negatives += np.sum(batch_img_labels[:,0] * predictions[:,0] > 0.5)
 
 
 
             # true positives
-            ppv += np.sum(batch_img_labels[:,1] * predictions[:,1])
+            true_positives += np.sum(batch_img_labels[:,1] * predictions[:,1] > 0.5)
 
             pos_predictions += np.sum(predictions)
 
-            # auc += tf.metrics.auc(batch_img_labels, predictions)[1]/np.floor(len(img_patches)/batch_size)
+            all_predictions += predictions[:,1].tolist()
+        auc = skm.roc_auc_score(np.array(img_labels)[:,1],all_predictions)
+        # import pdb; pdb.set_trace()
             # import pdb; pdb.set_trace()
 
 
-        if (2*npv + false_positive_patches+false_negative_patches) == 0:
+        if (2*true_positives + false_positive_patches+false_negative_patches) == 0:
             dice_score = 0
         else:
-            dice_score = 2*npv/(2*npv + false_positive_patches + false_negative_patches)
+            dice_score = 2*true_positives/(2*true_positives + false_positive_patches + false_negative_patches)
 
-        if npv + false_negative_patches == 0:
+        if true_negatives + false_negative_patches == 0:
             npv = 0
         else:
-            npv = (npv)/(npv + false_negative_patches)
+            npv = (true_negatives)/(true_negatives + false_negative_patches)
 
-        if ppv + false_positive_patches == 0:
+        if true_positives + false_positive_patches == 0:
             ppv = 0
         else:
-            ppv = (ppv)/(ppv + false_positive_patches)
+            ppv = (true_positives)/(true_positives + false_positive_patches)
 
         false_negative_patches = false_negative_patches/len(img_patches)
         false_positive_patches = false_positive_patches/len(img_patches)
@@ -128,7 +132,7 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
         avg_dice = (avg_dice*i + dice_score)/(i+1)
 
-        # avg_auc = (avg_auc*i + auc)/(i+1)
+        avg_auc = (avg_auc*i + auc)/(i+1)
 
         percent_polyp = pos_predictions/len(predictions)
         if percent_polyp > threshold:
