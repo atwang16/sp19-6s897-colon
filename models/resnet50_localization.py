@@ -6,6 +6,7 @@ import keras
 from keras.layers import Dense, Conv2D, BatchNormalization, Activation
 from keras.layers import GlobalAveragePooling2D, AveragePooling2D, MaxPool2D, Input, Flatten
 from keras.models import Model
+from keras.applications.resnet50 import ResNet50
 
 EXPANSION = 4
 
@@ -46,22 +47,26 @@ def resnet_layer(inputs, num_filters, num_blocks, strides=1):
 
 
 def resnet(input_shape, layers, pretrained_weights=None, use_sigmoid=False):
-    num_filters = 64
+    # num_filters = 64
+    #
+    # inputs = Input(shape=input_shape)
+    # x = Conv2D(num_filters, kernel_size=7, strides=2, padding='same', kernel_initializer='he_normal',
+    #            use_bias=False)(inputs)
+    # x = BatchNormalization()(x)
+    # x = Activation("relu")(x)
+    # x = MaxPool2D(pool_size=3, strides=2, padding="same")(x)
+    #
+    # for i, num_blocks in enumerate(layers):
+    #     x = resnet_layer(x, num_filters, num_blocks, strides=1 if i == 0 else 2)
+    #     num_filters *= 2
 
-    inputs = Input(shape=input_shape)
-    x = Conv2D(num_filters, kernel_size=7, strides=2, padding='same', kernel_initializer='he_normal',
-               use_bias=False)(inputs)
-    x = BatchNormalization()(x)
-    x = Activation("relu")(x)
-    x = MaxPool2D(pool_size=3, strides=2, padding="same")(x)
-
-    for i, num_blocks in enumerate(layers):
-        x = resnet_layer(x, num_filters, num_blocks, strides=1 if i == 0 else 2)
-        num_filters *= 2
+    base_model = ResNet50(weights='imagenet', include_top=False)
+    inputs = base_model.inputs
+    x = base_model.output
 
     # Fully connected
     x = GlobalAveragePooling2D()(x)
-    x = Flatten()(x)
+    # x = Flatten()(x)
     x = Dense(1024, kernel_initializer="he_normal")(x)
     x = BatchNormalization()(x)
     x = Activation("relu")(x)
