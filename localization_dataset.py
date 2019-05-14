@@ -28,11 +28,11 @@ class Dataset:
             "test": os.path.join(data_path, "test")
         }
         self.train_val_split = 0.75
+        self.normalize_labels = normalize_labels
 
         self.X_train, self.y_train, self.X_val, self.y_val = self.load_images("train", format, percent=self.train_val_split)
         self.X_test_orig, self.X_test, self.y_test = self.load_images("test", format, preserve_original=True)
         self.format = format
-        self.normalize_labels = normalize_labels
 
     @staticmethod
     def normalize(mat):
