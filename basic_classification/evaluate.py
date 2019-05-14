@@ -10,6 +10,7 @@ import os
 from os.path import join
 import argparse
 from keras.preprocessing.image import load_img,img_to_array
+from keras import optimizers
 
 import tensorflow as tf
 from sklearn.metrics import roc_auc_score
@@ -46,6 +47,7 @@ test_generator = test_datagen.flow_from_directory(args.test_path, target_size=(2
 print('\n=== Initiating Model ===\n')
 
 model = load_model(args.load_model)
+adam = optimizers.Adam(lr=0)
 model.compile(optimizer=adam, loss=args.loss, metrics=['accuracy', auc])
 
 model.evaluate_generator(test_generator, 
