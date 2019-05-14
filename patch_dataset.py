@@ -1045,7 +1045,6 @@ class Generator_Dataset_Rotated(keras.utils.Sequence):
         labels = []
 
         for angle in np.random.choice(np.arange(0, 360),2,replace=False):
-            print('\n\n\n\n '+str(angle))
             rotated_original = imutils.rotate(original_image_img, angle)
 
             rotated_gnd = imutils.rotate(ground_truth_img, angle)
