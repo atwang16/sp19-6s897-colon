@@ -13,7 +13,7 @@ import os
 from keras import backend as K
 
 
-#python3 patch_majority_voting.py --images data/segmentation/test/polyps/ --ground_truth data/segmentation/test/segmentations/ --load_model PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/
+#python3 patch_majority_voting.py --images data/segmentation/test/polyps/ --ground_truth data/segmentation/test/segmentations/ --load_model PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10_rerun/model_early_stop.h5
 
 parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
 # data location
@@ -81,14 +81,12 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
             false_negative_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] > 0)
 
             # true negatives
-            if batch_img_labels[:1] == 0:
-                if predictions[:1] == 0:
-                    npv += 1
+            npv += np.sum(batch_img_labels[:,0] * predictions[:,0])
+
+
 
             # true positives
-            if batch_img_labesl[:1] == 1:
-                if predictions[:1] == 1:
-                    ppv += 1
+            ppv += np.sum(batch_img_labels[:,1] * predictions[:,1])
 
             pos_predictions += np.sum(predictions)
 
