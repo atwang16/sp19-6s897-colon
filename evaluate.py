@@ -15,14 +15,17 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
 import cv2
+from keras.losses import mean_squared_error
 
 IMAGES_DIR = "data/segmentation"
+NORMALIZE_LABELS = True
+INPUT_SHAPE = (224, 224)
 
 
 def get_localization_format(typ):
-    if typ in {"yolov3"}:
+    if typ in {"yolov3", "resnet50", "baseline"}:
         return data.LocFormat.BOX
-    elif typ in {"vgg19", "resnet50"}:
+    elif typ in {"vgg19"}:
         return data.LocFormat.CENTER
     else:
         raise ValueError("Model type not supported.")
@@ -33,11 +36,11 @@ def get_model(typ, input_shape, pretrained_weights):
         model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
-        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights)
+        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
         loss = "mean_squared_error"
     elif typ == "yolov3":
-        model = yolo.YOLO(model_image_size=input_shape, model_path=pretrained_weights)
-        loss = None
+        model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
+        loss = {'yolo_loss': lambda y_true, y_pred: y_pred}
     else:
         raise ValueError(f"Model \"{typ}\" not supported.")
     return model, loss
@@ -96,36 +99,59 @@ def get_dice_score(fmt):
         raise ValueError(f"Format {fmt} not supported.")
 
 
+def dice_score_center_loss(y_true, y_pred):
+    return 1 - get_dice_score(LocFormat.CENTER)(y_true, y_pred, is_tf_metric=True)
+
+
+def small_bounding_box_loss(y_true, y_pred):
+    mse = mean_squared_error(y_true, y_pred)
+    pred_area = (y_pred[:, 2] - y_pred[:, 0]) * (y_pred[:, 3] - y_pred[:, 1])
+    large_bb = K.sum(pred_area)
+    return mse + 1 * large_bb
+
+
 def evaluate(model, dataset, split, typ):
     X = dataset.__getattribute__(f"X_{split}")
     y = dataset.__getattribute__(f"y_{split}")
 
     if typ == "yolov3":
         y_pred = model.evaluate_on_image(X)
+    elif typ == "baseline":
+        y_pred = np.array([[0, 0, dataset.input_shape[0], dataset.input_shape[1]] for _ in range(y.shape[0])])
     else:
         y_pred = model.predict(X)
-    # assert y.shape == y_pred.shape
+    assert y.shape == y_pred.shape
+    print(y_pred)
 
-    # score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
-    score = 0
+    score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
     return y_pred, score
 
 
 def visualize(save_dir, dataset, predictions, num_to_generate=None):
-    def get_bounding_box(box, color):
-        x_min, y_min, x_max, y_max = box
-        return patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min, linewidth=1, edgecolor=color,
+    def get_bounding_box(box, color, linewidth=1):
+        y_min, x_min, y_max, x_max = box
+        if NORMALIZE_LABELS:
+            x_min *= INPUT_SHAPE[0]
+            x_max *= INPUT_SHAPE[0]
+            y_min *= INPUT_SHAPE[1]
+            y_max *= INPUT_SHAPE[1]
+        return patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min, linewidth=linewidth, edgecolor=color,
                                  facecolor='none')
 
-    def get_bounding_box_center(box, color):
+    def get_bounding_box_center(box, color, linewidth=1):
         x_center, y_center, width, height = box
-        return patches.Rectangle((x_center - width / 2, y_center - height / 2), width, height, linewidth=1, edgecolor=color, facecolor='none')
+        if NORMALIZE_LABELS:
+            x_center *= INPUT_SHAPE[0]
+            width *= INPUT_SHAPE[0]
+            y_center *= INPUT_SHAPE[1]
+            height *= INPUT_SHAPE[1]
+        return patches.Rectangle((x_center - width / 2, y_center - height / 2), width, height, linewidth=linewidth, edgecolor=color, facecolor='none')
 
     X = dataset.__getattribute__("X_test_orig")
     y = dataset.__getattribute__("y_test")
     gbb = get_bounding_box if dataset.format == LocFormat.BOX else get_bounding_box_center
 
-    if num_to_generate is not None and num_to_generate > len(X):
+    if num_to_generate is not None and num_to_generate < len(X):
         X = X[:num_to_generate]
         y = y[:num_to_generate, ...]
 
@@ -139,14 +165,15 @@ def visualize(save_dir, dataset, predictions, num_to_generate=None):
         ax.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
         # Create a Rectangle patch
-        true_box = gbb(y[i, ...], color="r")
-        print(predictions[i])
-        for j in range(len(predictions[i])):
-            pred_box = gbb(predictions[i][j], color="b")
+        true_bb_rep = y[i, ...]
+        true_box = gbb(true_bb_rep, color="r", linewidth=3)
+        # for j in range(len(predictions[i])):
+        #     pred_box = gbb(predictions[i], color=(random.uniform(0, 1), random.uniform(0, 1), 0))
+        pred_box = gbb(predictions[i], color="b")
+        ax.add_patch(pred_box)
 
         # Add the patch to the Axes
         ax.add_patch(true_box)
-        ax.add_patch(pred_box)
         plt.axis('off')
         fig.savefig(os.path.join(save_dir, f"test_polyp_{i}.png"), bbox_inches=0)
         plt.close(fig)
@@ -159,7 +186,7 @@ if __name__ == '__main__':
     # Model hyperparameters
     parser.add_argument('--type', type=str, default='vgg19',
                         help='Determines which convolutional model to use. Valid options are {vgg19|resnet50|pvgg19}')
-    parser.add_argument('--load_model', type=str, help='Name of a model that will be loaded', required=True)
+    parser.add_argument('--load_model', type=str, help='Name of a model that will be loaded')
     parser.add_argument('--save_dir', type=str, help='Directory in which to save visualizations', required=True)
     parser.add_argument('--visualize', type=int, help='Number of images to visualize', default=None)
 
@@ -181,23 +208,25 @@ if __name__ == '__main__':
 
     print('\n=== Setting Up Data ===\n')
 
-    dataset = data.Dataset(IMAGES_DIR, format=get_localization_format(args.type))
+    dataset = data.Dataset(IMAGES_DIR, format=get_localization_format(args.type), normalize_labels=NORMALIZE_LABELS)
 
     print('\n=== Initiating Model ===\n')
+    if args.type != "baseline":
+        model, loss_function = get_model(args.type, dataset.input_shape, pretrained_weights=args.load_model)
+        localization_format = get_localization_format(args.type)
 
-    model, loss_function = get_model(args.type, dataset.input_shape, pretrained_weights=args.load_model)
-    localization_format = get_localization_format(args.type)
+        if args.type != "yolov3":
+            model.summary()
 
-    if args.type != "yolov3":
-        model.summary()
+        print('\n=== Compiling Model ===\n')
 
-    print('\n=== Compiling Model ===\n')
+        # optimizer
+        adam = optimizers.Adam(lr=0.0)  # beta_1=0.9, beta_2=0.999, decay=0.0
 
-    # optimizer
-    adam = optimizers.Adam(lr=0.0)  # beta_1=0.9, beta_2=0.999, decay=0.0
-
-    if args.type != "yolov3":
-        model.compile(optimizer=adam, loss=loss_function)
+        if args.type != "yolov3":
+            model.compile(optimizer=adam, loss=loss_function)
+    else:
+        model = None
 
     print('\n=== Evaluating Model ===\n')
     val_predictions, val_dice_score = evaluate(model, dataset, "val", args.type)
