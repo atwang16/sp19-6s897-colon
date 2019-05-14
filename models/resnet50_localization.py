@@ -4,7 +4,7 @@
 
 import keras
 from keras.layers import Dense, Conv2D, BatchNormalization, Activation
-from keras.layers import AveragePooling2D, MaxPool2D, Input, Flatten
+from keras.layers import GlobalAveragePooling2D, AveragePooling2D, MaxPool2D, Input, Flatten
 from keras.models import Model
 
 EXPANSION = 4
@@ -60,7 +60,7 @@ def resnet(input_shape, layers, pretrained_weights=None, use_sigmoid=False):
         num_filters *= 2
 
     # Fully connected
-    x = AveragePooling2D()(x)
+    x = GlobalAveragePooling2D()(x)
     x = Flatten()(x)
     x = Dense(1024, kernel_initializer="he_normal")(x)
     x = BatchNormalization()(x)
