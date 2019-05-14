@@ -74,17 +74,15 @@ def get_dice_score(fmt):
 
     def dice_score_center(y_true, y_pred, is_tf_metric=True):
         if is_tf_metric:
-            absolute_value = tf.math.abs
-            mean = tf.math.reduce_mean
+            st = tf.stack
         else:
-            absolute_value = np.abs
-            mean = np.mean
+            st = np.stack
+        y_true_box = st([y_true[:, 0] - y_true[:, 2] / 2, y_true[:, 1] - y_true[:, 3] / 2,
+                               y_true[:, 0] + y_true[:, 2] / 2, y_true[:, 1] + y_true[:, 3] / 2], 1)
+        y_pred_box = st([y_pred[:, 0] - y_pred[:, 2] / 2, y_pred[:, 1] - y_pred[:, 3] / 2,
+                               y_pred[:, 0] + y_pred[:, 2] / 2, y_pred[:, 1] + y_pred[:, 3] / 2], 1)
 
-        intersection_width = (y_true[:, 2] + y_pred[:, 2]) / 2 - absolute_value(y_true[:, 0] - y_pred[:, 0])
-        intersection_height = (y_true[:, 3] + y_pred[:, 3]) / 2 - absolute_value(y_true[:, 1] - y_pred[:, 1])
-        intersection_area = intersection_width * intersection_height
-        total_area = y_true[:, 2] * y_true[:, 3] + y_pred[:, 2] * y_pred[:, 3]
-        return 2 * mean(intersection_area / total_area)
+        return dice_score_box(y_true_box, y_pred_box, is_tf_metric=is_tf_metric)
 
     def dice_score_seg(y_true, y_pred, is_tf_metric=True):
         raise NotImplementedError("Dice score for segmentation not yet implemented.")
