@@ -119,8 +119,6 @@ if __name__ == '__main__':
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1**0.5, patience=12, verbose=1)
     # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
 
-    callbacks = [logging, checkpoint, reduce_lr]
-
     # optimizer
     adam = optimizers.Adam(lr=args.lr)  # beta_1=0.9, beta_2=0.999, decay=0.0
 
@@ -155,13 +153,19 @@ if __name__ == '__main__':
             model.compile(optimizer=adam, loss=loss_function,
                           metrics=[evaluate.rmse, evaluate.get_dice_score(localization_format), abs_error])
         # train model
+        checkpoint = ModelCheckpoint(filepath=os.path.join(args.output_dir, checkpoint_name),
+                                     monitor='val_abs_error',
+                                     verbose=1,
+                                     save_best_only=True,
+                                     save_weights_only=True,
+                                     mode='min')
         print("= Regular Training =")
         model.fit(dataset.X_train, dataset.y_train,
                   validation_data=(dataset.X_val, dataset.y_val),
                   epochs=args.num_epochs,
                   initial_epoch=initial_epoch,
                   batch_size=args.batch_size,
-                  callbacks=callbacks,
+                  callbacks=[logging, checkpoint, reduce_lr],
                   shuffle=True)
 
         print('\n=== Saving Model ===\n')

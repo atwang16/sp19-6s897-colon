@@ -36,7 +36,7 @@ def get_model(typ, input_shape, pretrained_weights):
         model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
-        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
+        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == "yolov3":
         model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
