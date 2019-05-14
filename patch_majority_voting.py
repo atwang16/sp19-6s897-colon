@@ -15,7 +15,7 @@ from keras import backend as K
 import tensorflow as tf
 
 
-#python3 patch_majority_voting.py --images data/segmentation/test/polyps/ --ground_truth data/segmentation/test/segmentations/ --load_model PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/model_early_stop.h5
+#python3 patch_majority_voting.py --images data/segmentation/test/polyps/ --ground_truth data/segmentation/test/segmentations/ --load_model PATCH_class_0001/model_early_stop.h5
 
 parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
 # data location
@@ -149,5 +149,6 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
     print('Full Dataset PPV',avg_ppv)
     print('Full Dataset NPV',avg_npv)
 
+    print('DICE SCORE',avg_dice)
     # print('AVG AUC',avg_auc)
     # print('AUC',skm.roc_auc_score(np.ones(len(predicted_labels)),predicted_labels))
