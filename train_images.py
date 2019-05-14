@@ -1,7 +1,7 @@
 # python3 train_images.py --num_epochs 50 --train_percent .70 --random_patches False --lr 0.001 --output_dir balanced_medium_normed/ --type pvgg19 --model_name model
 
 
- # python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches False --lr 0.001 --output_dir PATCH_balanced_pretrained/ --type pvgg19-pretrained --model_name model --loss binary_crossentropy --training_images data/segmentation/train/polyps/ --ground_truth data/segmentation/train/segmentations
+ # python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches False --lr 0.0001 --output_dir PATCH_vgg/ --type vgg19 --model_name model --loss binary_crossentropy --training_images data/segmentation/train/polyps/ --ground_truth data/segmentation/train/segmentations
 
 
 # python3 train_images.py --num_epochs 100 --train_percent .7 --random_patches False --lr 0.001 --output_dir PATCH_balanced_resnet50_lr_001_trP_70_vP_10/ --type resnet50 --model_name model --loss categorical_crossentropy --training_images data/segmentation/train/polyps/ --ground_truth data/segmentation/train/segmentations
@@ -82,7 +82,7 @@ print('\n=== Setting Up Data ===\n')
 print('=== Training Data ===')
 training_generator = data.Generator_Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, batch_size=args.batch_size)
 print('=== Test Data ===')
-valid_generator = data.Generator_Dataset_Rotated(args.patch_size, 'data/segmentation/test/polyps/', 'data/segmentation/test/segmentations/', batch_size=args.batch_size)
+# valid_generator = data.Generator_Dataset_Rotated(args.patch_size, 'data/segmentation/test/polyps/', 'data/segmentation/test/segmentations/', batch_size=args.batch_size)
 
 # (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
 
@@ -124,9 +124,11 @@ try:
     if not args.only_test:
         print('\n=== Training Model ===\n')
         # training the model
-        model.fit_generator(generator=training_generator,
+        # model.fit_generator(generator=training_generator,
                             steps_per_epoch=len(training_generator), epochs=args.num_epochs,
                             validation_data=valid_generator)#, callbacks=[mc])
+        model.fit_generator(generator=training_generator,
+                            steps_per_epoch=len(training_generator), epochs=args.num_epochs)
 
         print('\n=== Saving Model ===\n')
 
