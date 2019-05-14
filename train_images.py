@@ -79,9 +79,10 @@ sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 
 print('\n=== Setting Up Data ===\n')
 
+print('=== Training Data ===')
 training_generator = data.Generator_Dataset_Rotated(args.patch_size, args.training_images, args.ground_truth, batch_size=args.batch_size)
-
-valid_generator = Generator_Dataset_Rotated(args.patch_size, 'data/segmentation/test/polyps/', 'data/segmentation/test/segmentations/', batch_size=args.batch_size)
+print('=== Test Data ===')
+valid_generator = data.Generator_Dataset_Rotated(args.patch_size, 'data/segmentation/test/polyps/', 'data/segmentation/test/segmentations/', batch_size=args.batch_size)
 
 # (train_patches, train_labels), (valid_patches, valid_labels), (test_patches, test_labels) = dataset.split_data(train_percent = args.train_percent, validation_percent=args.validation_percent)
 
