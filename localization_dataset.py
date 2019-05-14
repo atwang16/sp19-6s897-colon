@@ -120,7 +120,7 @@ class Dataset:
         x_min, y_min, x_max, y_max = self.get_bounds(rescaled_segmentation)
 
         if format == LocFormat.BOX:
-            return np.array([x_min, y_min, x_max, y_max])
+            return np.array([y_min, x_min, y_max, x_max])
         elif format == LocFormat.CENTER:
             x_center = (x_min + x_max) / 2
             y_center = (y_min + y_max) / 2

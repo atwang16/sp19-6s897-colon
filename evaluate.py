@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
 import cv2
+import random
 
 IMAGES_DIR = "data/segmentation"
 
@@ -104,28 +105,28 @@ def evaluate(model, dataset, split, typ):
         y_pred = model.evaluate_on_image(X)
     else:
         y_pred = model.predict(X)
-    # assert y.shape == y_pred.shape
+    assert y.shape == y_pred.shape
 
-    # score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
-    score = 0
+    score = get_dice_score(dataset.format)(y, y_pred, is_tf_metric=False)
+    # score = 0
     return y_pred, score
 
 
 def visualize(save_dir, dataset, predictions, num_to_generate=None):
-    def get_bounding_box(box, color):
-        x_min, y_min, x_max, y_max = box
-        return patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min, linewidth=1, edgecolor=color,
+    def get_bounding_box(box, color, linewidth=1):
+        y_min, x_min, y_max, x_max = box
+        return patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min, linewidth=linewidth, edgecolor=color,
                                  facecolor='none')
 
-    def get_bounding_box_center(box, color):
+    def get_bounding_box_center(box, color, linewidth=1):
         x_center, y_center, width, height = box
-        return patches.Rectangle((x_center - width / 2, y_center - height / 2), width, height, linewidth=1, edgecolor=color, facecolor='none')
+        return patches.Rectangle((x_center - width / 2, y_center - height / 2), width, height, linewidth=linewidth, edgecolor=color, facecolor='none')
 
     X = dataset.__getattribute__("X_test_orig")
     y = dataset.__getattribute__("y_test")
     gbb = get_bounding_box if dataset.format == LocFormat.BOX else get_bounding_box_center
 
-    if num_to_generate is not None and num_to_generate > len(X):
+    if num_to_generate is not None and num_to_generate < len(X):
         X = X[:num_to_generate]
         y = y[:num_to_generate, ...]
 
@@ -139,14 +140,15 @@ def visualize(save_dir, dataset, predictions, num_to_generate=None):
         ax.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
         # Create a Rectangle patch
-        true_box = gbb(y[i, ...], color="r")
-        print(predictions[i])
-        for j in range(len(predictions[i])):
-            pred_box = gbb(predictions[i][j], color="b")
+        true_bb_rep = y[i, ...]
+        true_box = gbb(true_bb_rep, color="r", linewidth=3)
+        # for j in range(len(predictions[i])):
+        #     pred_box = gbb(predictions[i], color=(random.uniform(0, 1), random.uniform(0, 1), 0))
+        pred_box = gbb(predictions[i], color="b")
+        ax.add_patch(pred_box)
 
         # Add the patch to the Axes
         ax.add_patch(true_box)
-        ax.add_patch(pred_box)
         plt.axis('off')
         fig.savefig(os.path.join(save_dir, f"test_polyp_{i}.png"), bbox_inches=0)
         plt.close(fig)

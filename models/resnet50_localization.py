@@ -60,7 +60,7 @@ def resnet(input_shape, layers, pretrained_weights=None, use_sigmoid=False):
         num_filters *= 2
 
     # Fully connected
-    x = AveragePooling2D(pool_size=1)(x)
+    x = AveragePooling2D()(x)
     x = Flatten()(x)
     x = Dense(1024, kernel_initializer="he_normal")(x)
     x = BatchNormalization()(x)
@@ -70,7 +70,7 @@ def resnet(input_shape, layers, pretrained_weights=None, use_sigmoid=False):
         outputs = Dense(4, activation="sigmoid")(x)
         outputs = keras.layers.Lambda(lambda x: x * input_shape[0])(outputs)
     else:
-        outputs = Dense(4, activation="linear", kernel_initializer="he_normal")(y)
+        outputs = Dense(4, activation="linear", kernel_initializer="he_normal")(x)
 
     # Instantiate model.
     model = Model(inputs=inputs, outputs=outputs)

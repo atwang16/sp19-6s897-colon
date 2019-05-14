@@ -405,8 +405,8 @@ class YOLO(object):
     _defaults = {
         "model_path": 'model_data/yolo.h5',
         "anchors_path": 'models/yolo_anchors.txt',
-        "score" : 0.1,
-        "iou" : 0.3,
+        "score" : 0.01,
+        "iou" : 0.05,
         "model_image_size" : (224, 224)
     }
 
@@ -476,13 +476,12 @@ class YOLO(object):
                     K.learning_phase(): 0
                 })
             if len(out_boxes) > 0:
-                # y_min, x_min, y_max, x_max = out_boxes[0]  # TODO: how to select?
-                output.append(out_boxes)
+                y_min, x_min, y_max, x_max = out_boxes[0]  # TODO: how to select?
             else:
                 y_min, x_min, y_max, x_max = 0, 0, 0, 0
-                output.append([[x_min, y_min, x_max, y_max]])
+            output.append([y_min, x_min, y_max, x_max])
 
-        return output
+        return np.array(output)
 
     def close_session(self):
         self.sess.close()
