@@ -43,11 +43,18 @@ original_image_files = os.listdir(args.images)
 ground_truth_files = sorted(ground_truth_files)
 original_image_files = sorted(original_image_files)
 
-avg_fp = 0
-avg_fn = 0
+
 
 for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
     predicted_labels = []
+    avg_fp = 0
+    avg_fn = 0
+
+    avg_npv = 0
+    avg_ppv = 0
+
+    avg_dice = 0
+
     for i in range(len(ground_truth_files)):
         ground_truth_name = args.ground_truth+'/' + ground_truth_files[i]
         original_name = args.images +'/' + original_image_files[i]
@@ -57,6 +64,11 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
         batch_size = 100
         false_positive_patches = 0
         false_negative_patches = 0
+
+        npv = 0
+        ppv = 0
+
+        dice_score = 0
 
         pos_predictions = 0
         for batch_idx in range(0,len(img_patches),batch_size):
@@ -68,13 +80,38 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
             false_positive_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] < 0)
             false_negative_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] > 0)
 
+            # true negatives
+            if batch_img_labels[:1] == 0:
+                if predictions[:1] == 0:
+                    npv += 1
+
+            # true positives
+            if batch_img_labesl[:1] == 1:
+                if predictions[:1] == 1:
+                    ppv += 1
+
             pos_predictions += np.sum(predictions)
+
+
+        dice_score = 2*npv/(2*npv + false_positive_patches + false_negative_patches)
+
+        npv = (npv)/(npv + false_negative_patches)
+        ppv = (ppv)/(ppv + false_positive_patches)
 
         false_negative_patches = false_negative_patches/len(img_patches)
         false_positive_patches = false_positive_patches/len(img_patches)
 
+
+
+
+
         avg_fp = (avg_fp*i + false_positive_patches)/(i+1)
         avg_fn = (avg_fn*i + false_negative_patches)/(i+1)
+
+        avg_ppv = (avg_ppv*i + ppv)/(i+1)
+        avg_npv = (avg_npv*i + npv)/(i+1)
+
+        avg_dice = (avg_dice*i + dice_score)/(i+1)
 
         percent_polyp = pos_predictions/len(predictions)
         if percent_polyp > threshold:
@@ -90,4 +127,7 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
     print('Full Dataset F+',avg_fp)
     print('Full Dataset F-',avg_fn)
+
+    print('Full Dataset PPV',avg_ppv)
+    print('Full Dataset NPV',avg_npv)
     # print('AUC',skm.roc_auc_score(np.ones(len(predicted_labels)),predicted_labels))
