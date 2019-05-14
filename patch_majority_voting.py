@@ -12,8 +12,10 @@ import os
 
 from keras import backend as K
 
+import tensorflow as tf
 
-#python3 patch_majority_voting.py --images data/segmentation/test/polyps/ --ground_truth data/segmentation/test/segmentations/ --load_model PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10_rerun/model_early_stop.h5
+
+#python3 patch_majority_voting.py --images data/segmentation/test/polyps/ --ground_truth data/segmentation/test/segmentations/ --load_model PATCH_balanced_mediumvgg_lr_001_trP_70_vP_10/model_early_stop.h5
 
 parser = argparse.ArgumentParser(description='Polyp Detecting Model Evalutaion')
 # data location
@@ -55,6 +57,8 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
     avg_dice = 0
 
+    avg_auc = 0
+
     for i in range(len(ground_truth_files)):
         ground_truth_name = args.ground_truth+'/' + ground_truth_files[i]
         original_name = args.images +'/' + original_image_files[i]
@@ -67,8 +71,11 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
         npv = 0
         ppv = 0
+        auc = 0
 
         dice_score = 0
+
+        avg_auc
 
         pos_predictions = 0
         for batch_idx in range(0,len(img_patches),batch_size):
@@ -90,17 +97,27 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
             pos_predictions += np.sum(predictions)
 
+            # auc += tf.metrics.auc(batch_img_labels, predictions)[1]/np.floor(len(img_patches)/batch_size)
+            # import pdb; pdb.set_trace()
 
-        dice_score = 2*npv/(2*npv + false_positive_patches + false_negative_patches)
 
-        npv = (npv)/(npv + false_negative_patches)
-        ppv = (ppv)/(ppv + false_positive_patches)
+        if (2*npv + false_positive_patches+false_negative_patches) == 0:
+            dice_score = 0
+        else:
+            dice_score = 2*npv/(2*npv + false_positive_patches + false_negative_patches)
+
+        if npv + false_negative_patches == 0:
+            npv = 0
+        else:
+            npv = (npv)/(npv + false_negative_patches)
+
+        if ppv + false_positive_patches == 0:
+            ppv = 0
+        else:
+            ppv = (ppv)/(ppv + false_positive_patches)
 
         false_negative_patches = false_negative_patches/len(img_patches)
         false_positive_patches = false_positive_patches/len(img_patches)
-
-
-
 
 
         avg_fp = (avg_fp*i + false_positive_patches)/(i+1)
@@ -111,6 +128,8 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
         avg_dice = (avg_dice*i + dice_score)/(i+1)
 
+        # avg_auc = (avg_auc*i + auc)/(i+1)
+
         percent_polyp = pos_predictions/len(predictions)
         if percent_polyp > threshold:
             img_label = 1
@@ -118,6 +137,7 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
             img_label = 0
         # print(i, img_label, 'F+',false_positive_patches, 'F-',false_negative_patches)
         predicted_labels.append(img_label)
+
 
     print('Threshold',threshold)
 
@@ -128,4 +148,6 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
     print('Full Dataset PPV',avg_ppv)
     print('Full Dataset NPV',avg_npv)
+
+    # print('AVG AUC',avg_auc)
     # print('AUC',skm.roc_auc_score(np.ones(len(predicted_labels)),predicted_labels))
