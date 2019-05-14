@@ -107,7 +107,7 @@ def small_bounding_box_loss(y_true, y_pred):
     mse = mean_squared_error(y_true, y_pred)
     pred_area = (y_pred[:, 2] - y_pred[:, 0]) * (y_pred[:, 3] - y_pred[:, 1])
     large_bb = K.mean(K.square(pred_area))
-    return mse + 0.2 * large_bb
+    return mse + 0.05 * large_bb
 
 
 def evaluate(model, dataset, split, typ):

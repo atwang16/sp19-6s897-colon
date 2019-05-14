@@ -36,7 +36,9 @@ def vgg19(input_shape, pretrained_weights=None, use_sigmoid=False):
     # fully connected layers
     x = GlobalAveragePooling2D()(x)
     # x = Flatten(name="flatten")(x)
-    x = Dense(1024, activation="relu")(x)
+    x = Dense(1024, kernel_initializer="he_normal")(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
     # x = Dense(1560, activation="relu")(x)
     if use_sigmoid:
         assert input_shape[0] == input_shape[1], "Currently only support equal width and height"
