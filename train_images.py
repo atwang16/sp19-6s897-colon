@@ -95,6 +95,8 @@ else:
         model = resnet50.resnet(training_generator.input_shape, args.num_classes)
     elif args.type == 'pvgg19':
         model = pvgg19.patch_vgg(training_generator.input_shape, args.num_classes)
+    elif args.type == 'pvgg19-pretrained':
+        model = pvgg19.patch_vgg_pretrained(training_generator.input_shape, args.num_classes)
 
 model.summary()
 
@@ -123,40 +125,40 @@ try:
         print('\n=== Saving Model ===\n')
 
         model.save(args.output_dir+args.model_name+'.h5')
-
-        plt.plot(history.history['loss'])
-        plt.title('Model Loss')
-        plt.ylabel('Loss')
-        plt.xlabel('Epoch')
-        plt.savefig(args.output_dir+'loss_over_epochs.png')
-        plt.close()
-
-        plt.plot(history.history['categorical_accuracy'])
-        plt.plot(history.history['val_categorical_accuracy'])
-        plt.title('Model Categorical Accuracy')
-        plt.ylabel('Categorical Accuracy')
-        plt.xlabel('Epoch')
-        plt.legend(['Train','Test'],loc='upper left')
-        plt.savefig(args.output_dir+'categorical_over_epochs.png')
-        plt.close()
-
-        plt.plot(history.history['binary_accuracy'])
-        plt.plot(history.history['val_binary_accuracy'])
-        plt.title('Model Binary Accuracy')
-        plt.ylabel('Binary Accuracy')
-        plt.xlabel('Epoch')
-        plt.legend(['Train','Test'],loc='upper left')
-        plt.savefig(args.output_dir+'binary_over_epochs.png')
-        plt.close()
-
-        plt.plot(history.history['auc_metric'])
-        plt.plot(history.history['val_auc_metric'])
-        plt.title('Model AUC')
-        plt.ylabel('AUC')
-        plt.xlabel('Epoch')
-        plt.legend(['Train','Test'],loc='upper left')
-        plt.savefig(args.output_dir+'auc_over_epochs.png')
-        plt.close()
+        #
+        # plt.plot(history.history['loss'])
+        # plt.title('Model Loss')
+        # plt.ylabel('Loss')
+        # plt.xlabel('Epoch')
+        # plt.savefig(args.output_dir+'loss_over_epochs.png')
+        # plt.close()
+        #
+        # plt.plot(history.history['categorical_accuracy'])
+        # plt.plot(history.history['val_categorical_accuracy'])
+        # plt.title('Model Categorical Accuracy')
+        # plt.ylabel('Categorical Accuracy')
+        # plt.xlabel('Epoch')
+        # plt.legend(['Train','Test'],loc='upper left')
+        # plt.savefig(args.output_dir+'categorical_over_epochs.png')
+        # plt.close()
+        #
+        # plt.plot(history.history['binary_accuracy'])
+        # plt.plot(history.history['val_binary_accuracy'])
+        # plt.title('Model Binary Accuracy')
+        # plt.ylabel('Binary Accuracy')
+        # plt.xlabel('Epoch')
+        # plt.legend(['Train','Test'],loc='upper left')
+        # plt.savefig(args.output_dir+'binary_over_epochs.png')
+        # plt.close()
+        #
+        # plt.plot(history.history['auc_metric'])
+        # plt.plot(history.history['val_auc_metric'])
+        # plt.title('Model AUC')
+        # plt.ylabel('AUC')
+        # plt.xlabel('Epoch')
+        # plt.legend(['Train','Test'],loc='upper left')
+        # plt.savefig(args.output_dir+'auc_over_epochs.png')
+        # plt.close()
 
     print('\n=== Evaluating Model ===\n')
 
