@@ -39,19 +39,19 @@ def train_model_from_dir(
 
     _presaving(model, MODEL_DIR, params)
 
-    train_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
+    train_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function, rotation_range=90, horizontal_flip=True, vertical_flip=True)
     train_generator = train_datagen.flow_from_directory(train_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True)         
-    valid_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
+    valid_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function, rotation_range=90, horizontal_flip=True, vertical_flip=True)
     validation_generator = train_datagen.flow_from_directory(valid_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True)
 
     tensorboard = TensorBoard(histogram_freq=0, write_graph=True, write_images=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.00001)
-    early_stop = EarlyStopping(monitor='val_loss', patience=50)
+    early_stop = EarlyStopping(monitor='val_acc', patience=50)
     checkpoint = ModelCheckpoint(join(MODEL_DIR,'model.h5'), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     
     history = model.fit_generator(
-        train_generator, 
-        steps_per_epoch=train_generator.samples//batch_size, 
+        train_generator,
+        steps_per_epoch=train_generator.samples//batch_size,
         validation_data=validation_generator,
         validation_steps=validation_generator.samples//batch_size, 
         epochs=epochs, 

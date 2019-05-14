@@ -6,9 +6,7 @@ from keras import models
 from keras import layers
 from keras.applications.vgg16 import VGG16
 
-
-
-def vgg(input_shape, num_classes):
+def vgg16(input_shape, num_classes):
 
     # convolutional layers
     vgg_conv = VGG16(weights='imagenet', include_top=False, input_shape=input_shape)
@@ -20,8 +18,11 @@ def vgg(input_shape, num_classes):
     model = models.Sequential()
     model.add(vgg_conv)
     model.add(layers.Flatten())
+    model.add(layers.Dropout(0.5))
     model.add(layers.Dense(1560, activation='relu'))
+    model.add(layers.Dropout(0.5))
     model.add(layers.Dense(1560, activation='relu'))
     model.add(layers.Dense(num_classes, activation='softmax'))
 
     return model
+
