@@ -40,7 +40,7 @@ def get_model(typ, input_shape, pretrained_weights):
         model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
-        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
+        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
         loss = "mean_squared_error"
     elif typ == "yolov3":
         model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
@@ -142,7 +142,8 @@ if __name__ == '__main__':
                   epochs=epochs_to_train,
                   initial_epoch=initial_epoch,
                   batch_size=args.batch_size,
-                  callbacks=[logging, checkpoint])
+                  callbacks=[logging, checkpoint],
+                  shuffle=True)
         model.save_weights(os.path.join(args.output_dir, f"{model_name}_initial.h5"))
         initial_epoch += epochs_to_train
 
@@ -160,7 +161,8 @@ if __name__ == '__main__':
                   epochs=args.num_epochs,
                   initial_epoch=initial_epoch,
                   batch_size=args.batch_size,
-                  callbacks=callbacks)
+                  callbacks=callbacks,
+                  shuffle=True)
 
         print('\n=== Saving Model ===\n')
         model.save_weights(os.path.join(args.output_dir, f"{model_name}_final.h5"))

@@ -17,6 +17,8 @@ import os
 import cv2
 
 IMAGES_DIR = "data/segmentation"
+NORMALIZE_LABELS = True
+INPUT_SHAPE = (224, 224)
 
 
 def get_localization_format(typ):
@@ -33,14 +35,11 @@ def get_model(typ, input_shape, pretrained_weights):
         model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
-        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
+        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == "yolov3":
         model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
         loss = {'yolo_loss': lambda y_true, y_pred: y_pred}
-    elif typ == "baseline":
-        model = baseline.baseline(input_shape)
-        loss = "mean_squared_error"
     else:
         raise ValueError(f"Model \"{typ}\" not supported.")
     return model, loss
@@ -122,11 +121,21 @@ def evaluate(model, dataset, split, typ):
 def visualize(save_dir, dataset, predictions, num_to_generate=None):
     def get_bounding_box(box, color, linewidth=1):
         y_min, x_min, y_max, x_max = box
+        if NORMALIZE_LABELS:
+            x_min *= INPUT_SHAPE[0]
+            x_max *= INPUT_SHAPE[0]
+            y_min *= INPUT_SHAPE[1]
+            y_max *= INPUT_SHAPE[1]
         return patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min, linewidth=linewidth, edgecolor=color,
                                  facecolor='none')
 
     def get_bounding_box_center(box, color, linewidth=1):
         x_center, y_center, width, height = box
+        if NORMALIZE_LABELS:
+            x_center *= INPUT_SHAPE[0]
+            width *= INPUT_SHAPE[0]
+            y_center *= INPUT_SHAPE[1]
+            height *= INPUT_SHAPE[1]
         return patches.Rectangle((x_center - width / 2, y_center - height / 2), width, height, linewidth=linewidth, edgecolor=color, facecolor='none')
 
     X = dataset.__getattribute__("X_test_orig")
@@ -190,7 +199,7 @@ if __name__ == '__main__':
 
     print('\n=== Setting Up Data ===\n')
 
-    dataset = data.Dataset(IMAGES_DIR, format=get_localization_format(args.type))
+    dataset = data.Dataset(IMAGES_DIR, format=get_localization_format(args.type), normalize_labels=NORMALIZE_LABELS)
 
     print('\n=== Initiating Model ===\n')
     if args.type != "baseline":
