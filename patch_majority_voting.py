@@ -59,6 +59,9 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
     avg_auc = 0
 
+    avg_spec = 0
+    avg_sens = 0
+
     for i in range(len(ground_truth_files)):
         ground_truth_name = args.ground_truth+'/' + ground_truth_files[i]
         original_name = args.images +'/' + original_image_files[i]
@@ -74,6 +77,9 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
         ppv = 0
         auc = 0
 
+        sens = 0
+        spec = 0
+
         true_positives = 0
         true_negatives = 0
 
@@ -88,11 +94,9 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
             false_positive_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] < 0)
             false_negative_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] > 0)
-
+            # print(batch_img_labels[:,1],predictions[:,1])
             # true negatives
             true_negatives += np.sum(batch_img_labels[:,0] * predictions[:,0] > 0.5)
-
-
 
             # true positives
             true_positives += np.sum(batch_img_labels[:,1] * predictions[:,1] > 0.5)
@@ -103,7 +107,6 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
         auc = skm.roc_auc_score(np.array(img_labels)[:,1],all_predictions)
         # import pdb; pdb.set_trace()
             # import pdb; pdb.set_trace()
-
 
         if (2*true_positives + false_positive_patches+false_negative_patches) == 0:
             dice_score = 0
@@ -123,12 +126,20 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
         false_negative_patches = false_negative_patches/len(img_patches)
         false_positive_patches = false_positive_patches/len(img_patches)
 
+        if (true_positives + false_negative_patches) > 0:
+            sense = true_positives/(true_positives + false_negative_patches)
+
+        if (true_negatives+false_positive_patches) > 0:
+            spec = true_negatives/(true_negatives+false_positive_patches)
 
         avg_fp = (avg_fp*i + false_positive_patches)/(i+1)
         avg_fn = (avg_fn*i + false_negative_patches)/(i+1)
 
         avg_ppv = (avg_ppv*i + ppv)/(i+1)
         avg_npv = (avg_npv*i + npv)/(i+1)
+
+        avg_spec = (avg_spec*i + spec)/(i+1)
+        avg_sens = (avg_sense*i + sense)/(i+1)
 
         avg_dice = (avg_dice*i + dice_score)/(i+1)
 
