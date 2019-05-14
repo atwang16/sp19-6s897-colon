@@ -106,7 +106,7 @@ def dice_score_center_loss(y_true, y_pred):
 def small_bounding_box_loss(y_true, y_pred):
     mse = mean_squared_error(y_true, y_pred)
     pred_area = (y_pred[:, 2] - y_pred[:, 0]) * (y_pred[:, 3] - y_pred[:, 1])
-    large_bb = K.sum(pred_area)
+    large_bb = K.mean(K.square(pred_area))
     return mse + 1 * large_bb
 
 
