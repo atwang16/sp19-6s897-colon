@@ -53,6 +53,8 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
     avg_npv = 0
     avg_ppv = 0
 
+    avg_dice = 0
+
     for i in range(len(ground_truth_files)):
         ground_truth_name = args.ground_truth+'/' + ground_truth_files[i]
         original_name = args.images +'/' + original_image_files[i]
@@ -66,6 +68,8 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
         npv = 0
         ppv = 0
 
+        dice_score = 0
+
         pos_predictions = 0
         for batch_idx in range(0,len(img_patches),batch_size):
             batch_img_patches = np.array(img_patches[batch_idx:batch_idx+batch_size])
@@ -76,16 +80,20 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
             false_positive_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] < 0)
             false_negative_patches += np.sum(batch_img_labels[:,1] - predictions[:,1] > 0)
 
+            # true negatives
             if batch_img_labels[:1] == 0:
                 if predictions[:1] == 0:
                     npv += 1
 
+            # true positives
             if batch_img_labesl[:1] == 1:
                 if predictions[:1] == 1:
                     ppv += 1
 
             pos_predictions += np.sum(predictions)
 
+
+        dice_score = 2*npv/(2*npv + false_positive_patches + false_negative_patches)
 
         npv = (npv)/(npv + false_negative_patches)
         ppv = (ppv)/(ppv + false_positive_patches)
@@ -95,11 +103,15 @@ for threshold in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
 
 
 
+
+
         avg_fp = (avg_fp*i + false_positive_patches)/(i+1)
         avg_fn = (avg_fn*i + false_negative_patches)/(i+1)
 
         avg_ppv = (avg_ppv*i + ppv)/(i+1)
         avg_npv = (avg_npv*i + npv)/(i+1)
+
+        avg_dice = (avg_dice*i + dice_score)/(i+1)
 
         percent_polyp = pos_predictions/len(predictions)
         if percent_polyp > threshold:
