@@ -83,16 +83,12 @@ class Dataset:
         return np.array(patches), np.array(labels)
 
     def image_to_sequential_patches(self, original_image, ground_truth, new_shape = None):
-
+        threshold = 0.5
         ground_truth_img = cv2.imread(ground_truth,0)
-        if new_shape is not None:
-            ground_truth_img = cv2.resize(ground_truth_img, new_shape, interpolation = cv2.INTER_CUBIC)
         ground_truth_img = self.normalize_vector(ground_truth_img)
 
         original_image_img = cv2.imread(original_image)
-        original_image_img = cv2.cvtColor(original_image_img, cv2.COLOR_BGR2RGB)
-        if new_shape is not None:
-            original_image_img = cv2.resize(original_image_img, new_shape, interpolation = cv2.INTER_CUBIC)
+        # original_image_img = cv2.cvtColor(original_image_img, cv2.COLOR_BGR2RGB)
         original_image_img = self.normalize_vector(original_image_img)
 
         y_size,x_size = ground_truth_img.shape
@@ -129,7 +125,7 @@ class Dataset:
 
                 patch_array = np.array(ground_truth_patch)
                 mean_patch_value = patch_array.mean()
-                if mean_patch_value >= 0.75:
+                if mean_patch_value >= threshold:
                     label = 1
                 else:
                     label = 0
