@@ -126,8 +126,7 @@ try:
         # training the model
         model.fit_generator(generator=training_generator,
                             steps_per_epoch=len(training_generator), epochs=args.num_epochs,
-                            validation_data=valid_generator,
-                            validation_steps=10)#, callbacks=[mc])
+                            validation_data=valid_generator)#, callbacks=[mc])
 
         print('\n=== Saving Model ===\n')
 
