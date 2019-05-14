@@ -1035,11 +1035,13 @@ class Generator_Dataset_Rotated(keras.utils.Sequence):
         return (mat - mean) / std
 
     def image_to_sequential_patches(self, original_image, ground_truth, new_shape = (224,224)):
+
+        threshold = 0.5
         ground_truth_img = cv2.imread(ground_truth,0)
         ground_truth_img = self.normalize_vector(ground_truth_img)
 
         original_image_img = cv2.imread(original_image)
-        original_image_img = cv2.cvtColor(original_image_img, cv2.COLOR_BGR2RGB)
+        # original_image_img = cv2.cvtColor(original_image_img, cv2.COLOR_BGR2RGB)
         original_image_img = self.normalize_vector(original_image_img)
 
         pos_patches = []
@@ -1078,85 +1080,88 @@ class Generator_Dataset_Rotated(keras.utils.Sequence):
 
                     box = (left, upper, right, lower)
 
-                    ground_truth_patch = ground_truth_img[upper:lower, left:right]
-                    original_image_patch = original_image_img[upper:lower, left:right]
+                    ground_truth_patch = rotated_gnd[upper:lower, left:right]
+                    original_image_patch = rotated_original[upper:lower, left:right]
+
+                    if np.array(ground_truth_patch).mean() >= threshold:
+                        pos_patches.append(original_image_patch)
+                    else:
+                        neg_patches.append(original_image_patch)
 
                     shift_x = int(np.random.rand()*(self.patch_size/2))
                     shift_y = int(np.random.rand()*(self.patch_size/2))
 
                     # UL
-                    UL = original_image_img[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+                    UL = rotated_original[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+
+                    gnd = rotated_gnd[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+
+                    if np.array(gnd).mean() >= threshold:
+                        pos_patches.append(UL)
+
 
                     # UC
-                    UC = original_image_img[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left):x_trunc(right)]
+                    UC = rotated_original[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left):x_trunc(right)]
+
+                    gnd = rotated_gnd[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left):x_trunc(right)]
+
+                    if np.array(gnd).mean() >= threshold:
+                        pos_patches.append(UC)
 
                     # UR
-                    UR = original_image_img[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
+                    UR = rotated_original[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
 
+                    gnd = rotated_gnd[y_trunc(upper-shift_y):y_trunc(lower-shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
 
+                    if np.array(gnd).mean() >= threshold:
+                        pos_patches.append(UR)
 
                     # LL
-                    LL = original_image_img[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+                    LL = rotated_original[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+
+                    gnd = rotated_gnd[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+
+                    if np.array(gnd).mean() >= threshold:
+                        pos_patches.append(LL)
 
                     # LC
-                    LC = original_image_img[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left):x_trunc(right)]
+                    LC = rotated_original[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left):x_trunc(right)]
+
+                    gnd = rotated_gnd[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left):x_trunc(right)]
+
+                    if np.array(gnd).mean() >= threshold:
+                        pos_patches.append(LC)
 
                     # LR
-                    LR = original_image_img[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
+                    LR = rotated_original[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
 
+                    gnd = rotated_gnd[y_trunc(upper+shift_y):y_trunc(lower+shift_y), x_trunc(left+shift_x):x_trunc(right+shift_x)]
 
+                    if np.array(gnd).mean() >= threshold:
+                        pos_patches.append(LR)
 
                     # CL
-                    CL = original_image_img[y_trunc(upper):y_trunc(lower), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+                    CL = rotated_original[y_trunc(upper):y_trunc(lower), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+
+                    gnd = rotated_gnd[y_trunc(upper):y_trunc(lower), x_trunc(left-shift_x):x_trunc(right-shift_x)]
+
+                    if np.array(gnd).mean() >= threshold:
+                        pos_patches.append(CL)
 
                     # CR
-                    CR = original_image_img[y_trunc(upper):y_trunc(lower), x_trunc(left+shift_x):x_trunc(right+shift_x)]
+                    CR = rotated_original[y_trunc(upper):y_trunc(lower), x_trunc(left+shift_x):x_trunc(right+shift_x)]
 
+                    gnd = rotated_gnd[y_trunc(upper):y_trunc(lower), x_trunc(left+shift_x):x_trunc(right+shift_x)]
 
+                    if np.array(gnd).mean() >= threshold:
+                        pos_patches.append(CR)
 
-                    patch_array = np.array(ground_truth_patch)
-                    mean_patch_value = patch_array.mean()
-                    if mean_patch_value >= 0.75:
-                        label = 1
-
-                        if UL.shape == (self.patch_size,self.patch_size,3):
-                            pos_patches.append(UL)
-
-                        if UC.shape == (self.patch_size,self.patch_size,3):
-                            pos_patches.append(UC)
-                        if UR.shape == (self.patch_size,self.patch_size,3):
-                            pos_patches.append(UR)
-                        if LL.shape == (self.patch_size,self.patch_size,3):
-                            pos_patches.append(LL)
-
-                        if LC.shape == (self.patch_size,self.patch_size,3):
-                            pos_patches.append(LC)
-
-                        if LR.shape == (self.patch_size,self.patch_size,3):
-                            pos_patches.append(LR)
-
-                        if CL.shape == (self.patch_size,self.patch_size,3):
-                            pos_patches.append(CL)
-
-                        if CR.shape == (self.patch_size,self.patch_size,3):
-                            pos_patches.append(CR)
-
-                        pos_patches.append(original_image_patch)
-                    else:
-                        neg_patches.append(original_image_patch)
-
-
-
-        # import pdb; pdb.set_trace()
-        # for x in patches:
-        #     print(x.shape)
-        # python3 train_images.py --num_patches 10 --lr 0.001 --type pvgg19_pretrained --output_dir reweighted_balanced_pretrained_categorical/ --train_percent 0.7 --patch_size 32 --loss categorical_crossentropy --random_patches False
 
         if len(pos_patches) < len(neg_patches):
             random_neg_ids = np.random.choice(range(len(neg_patches)),len(pos_patches),replace=False)
             neg_patches = np.array(neg_patches)[random_neg_ids]
             pos_patches = np.array(pos_patches)
-        elif len(pos_patches) >= len(neg_patches):
+        elif len(pos_patches) > len(neg_patches):
             random_pos_ids = np.random.choice(range(len(pos_patches)),len(neg_patches),replace=False)
             pos_patches = np.array(pos_patches)[random_pos_ids]
             neg_patches = np.array(neg_patches)
