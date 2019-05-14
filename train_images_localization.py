@@ -29,25 +29,25 @@ def get_localization_format(typ):
         raise ValueError("Model type not supported.")
 
 
+def abs_error(y_true, y_pred):
+    y_true = K.sum(y_true)
+    y_pred = K.sum(y_pred)
+    return K.abs(y_true-y_pred)
+
+
 def get_model(typ, input_shape, pretrained_weights):
     if typ == 'vgg19':
         model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
         model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
-        loss = "mean_squared_error"
+        loss = evaluate.dice_score_center_loss
     elif typ == "yolov3":
         model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
         loss = {'yolo_loss': lambda y_true, y_pred: y_pred}
     else:
         raise ValueError(f"Model \"{typ}\" not supported.")
     return model, loss
-
-
-def abs_error(y_true, y_pred):
-    y_true = K.sum(y_true)
-    y_pred = K.sum(y_pred)
-    return K.abs(y_true-y_pred)
 
 
 if __name__ == '__main__':
