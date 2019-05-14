@@ -48,7 +48,7 @@ print('\n=== Initiating Model ===\n')
 
 model = load_model(args.load_model)
 adam = optimizers.Adam(lr=0)
-model.compile(optimizer=adam, loss=args.loss, metrics=['accuracy', auc])
+model.compile(optimizer=adam, loss='sparse_categorical_crossentropy', metrics=['accuracy', auc])
 
 model.evaluate_generator(test_generator, 
 		steps_per_epoch=train_generator.samples//batch_size, 
