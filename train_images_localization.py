@@ -21,9 +21,9 @@ import time
 IMAGES_DIR = "data/segmentation"
 
 def get_localization_format(typ):
-    if typ in {"yolov3"}:
+    if typ in {"yolov3", "resnet50"}:
         return data.LocFormat.BOX
-    elif typ in {"vgg19", "resnet50"}:
+    elif typ in {"vgg19"}:
         return data.LocFormat.CENTER
     else:
         raise ValueError("Model type not supported.")
@@ -41,7 +41,7 @@ def get_model(typ, input_shape, pretrained_weights):
         loss = "mean_squared_error"
     elif typ == 'resnet50':
         model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
-        loss = evaluate.dice_score_center_loss
+        loss = "mean_squared_error"
     elif typ == "yolov3":
         model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
         loss = {'yolo_loss': lambda y_true, y_pred: y_pred}
@@ -56,6 +56,7 @@ if __name__ == '__main__':
 
     # Model hyperparameters
     parser.add_argument('--num_epochs', type=int, default=100, help='Number of epochs to train the model')
+    parser.add_argument('--num_frozen', type=int, default=10, help='Number of frozen epochs to train the model')
     parser.add_argument('--lr', type=float, default=0.01, help='Learning rate to train the model')
     parser.add_argument('--batch_size', type=int, default=8, help='Learning rate to train the model')
     parser.add_argument('--type', type=str, default='vgg19', help='Determines which convolutional model to use. Valid options are {vgg19|resnet50|pvgg19}')
@@ -135,21 +136,23 @@ if __name__ == '__main__':
         print ("= Frozen Training =")
 
         initial_epoch = 0
-        if args.type == "yolov3":  # freeze train
-            epochs_to_train = max(1, min(8, args.num_epochs // 2))
-            model.fit(dataset.X_train, dataset.y_train,
-                      validation_data=(dataset.X_val, dataset.y_val),
-                      epochs=epochs_to_train,
-                      initial_epoch=initial_epoch,
-                      batch_size=args.batch_size,
-                      callbacks=[logging, checkpoint])
-            model.save_weights(os.path.join(args.output_dir, f"{model_name}_initial.h5"))
-            initial_epoch += epochs_to_train
+        epochs_to_train = max(1, min(args.num_frozen, args.num_epochs // 2))
+        model.fit(dataset.X_train, dataset.y_train,
+                  validation_data=(dataset.X_val, dataset.y_val),
+                  epochs=epochs_to_train,
+                  initial_epoch=initial_epoch,
+                  batch_size=args.batch_size,
+                  callbacks=[logging, checkpoint])
+        model.save_weights(os.path.join(args.output_dir, f"{model_name}_initial.h5"))
+        initial_epoch += epochs_to_train
 
-            for i in range(len(model.layers)):
-                model.layers[i].trainable = True
-            model.compile(optimizer=optimizers.Adam(lr=args.lr),
-                          loss=loss_function, metrics=[abs_error])  # recompile to apply the change
+        for i in range(len(model.layers)):
+            model.layers[i].trainable = True
+        if args.type == "yolov3":
+            model.compile(optimizer=adam, loss=loss_function, metrics=[abs_error])
+        else:
+            model.compile(optimizer=adam, loss=loss_function,
+                          metrics=[evaluate.rmse, evaluate.get_dice_score(localization_format), abs_error])
         # train model
         print("= Regular Training =")
         model.fit(dataset.X_train, dataset.y_train,

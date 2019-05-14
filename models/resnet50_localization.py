@@ -83,6 +83,9 @@ def resnet(input_shape, layers, pretrained_weights=None, use_sigmoid=False):
     if pretrained_weights is not None:
         model.load_weights(pretrained_weights, by_name=True)
 
+    for i in range(len(base_model.layers)):
+        base_model.layers[i].trainable = False
+
     return model
 
 def resnet50(input_shape, pretrained_weights=None, use_sigmoid=False):

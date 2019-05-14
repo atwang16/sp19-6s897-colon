@@ -15,15 +15,14 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
 import cv2
-import random
 
 IMAGES_DIR = "data/segmentation"
 
 
 def get_localization_format(typ):
-    if typ in {"yolov3"}:
+    if typ in {"yolov3", "resnet50"}:
         return data.LocFormat.BOX
-    elif typ in {"vgg19", "resnet50"}:
+    elif typ in {"vgg19"}:
         return data.LocFormat.CENTER
     else:
         raise ValueError("Model type not supported.")
@@ -31,10 +30,10 @@ def get_localization_format(typ):
 
 def get_model(typ, input_shape, pretrained_weights):
     if typ == 'vgg19':
-        model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
+        model = vgg.vgg19(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
         loss = "mean_squared_error"
     elif typ == 'resnet50':
-        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights)
+        model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=False)
         loss = "mean_squared_error"
     elif typ == "yolov3":
         model = yolo.YOLO(model_image_size=input_shape, model_path=pretrained_weights)

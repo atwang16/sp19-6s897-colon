@@ -4,8 +4,9 @@
 
 import keras
 from keras.layers import Dense, Conv2D, BatchNormalization, Activation
-from keras.layers import MaxPool2D, Input, Flatten
+from keras.layers import MaxPool2D, Input, Flatten, GlobalAveragePooling2D
 from keras.models import Model
+from keras.applications.vgg19 import VGG19
 
 def convs(input, num_filters, kernel_size, stride, num_layers=1):
     x = input
@@ -19,17 +20,22 @@ def convs(input, num_filters, kernel_size, stride, num_layers=1):
     return x
 
 def vgg19(input_shape, pretrained_weights=None, use_sigmoid=False):
-    inputs = Input(shape=input_shape)
+    # inputs = Input(shape=input_shape)
+    #
+    # # convolutional layers
+    # x = convs(inputs, num_filters=64, kernel_size=3, stride=1, num_layers=2)
+    # x = convs(x, num_filters=128, kernel_size=3, stride=1, num_layers=2)
+    # x = convs(x, num_filters=256, kernel_size=3, stride=1, num_layers=4)
+    # x = convs(x, num_filters=512, kernel_size=3, stride=1, num_layers=4)
+    # x = convs(x, num_filters=512, kernel_size=3, stride=1, num_layers=4)
 
-    # convolutional layers
-    x = convs(inputs, num_filters=64, kernel_size=3, stride=1, num_layers=2)
-    x = convs(x, num_filters=128, kernel_size=3, stride=1, num_layers=2)
-    x = convs(x, num_filters=256, kernel_size=3, stride=1, num_layers=4)
-    x = convs(x, num_filters=512, kernel_size=3, stride=1, num_layers=4)
-    x = convs(x, num_filters=512, kernel_size=3, stride=1, num_layers=4)
+    base_model = VGG19(weights='imagenet')
+    inputs = base_model.inputs
+    x = base_model.output
 
     # fully connected layers
-    x = Flatten(name="flatten")(x)
+    x = GlobalAveragePooling2D()(x)
+    # x = Flatten(name="flatten")(x)
     x = Dense(1560, activation="relu")(x)
     x = Dense(1560, activation="relu")(x)
     if use_sigmoid:
@@ -44,5 +50,8 @@ def vgg19(input_shape, pretrained_weights=None, use_sigmoid=False):
 
     if pretrained_weights is not None:
         model.load_weights(pretrained_weights, by_name=True)
+
+    for i in range(len(base_model.layers)):
+        base_model.layers[i].trainable = False
 
     return model
