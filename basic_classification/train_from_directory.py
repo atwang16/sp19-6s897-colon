@@ -13,16 +13,18 @@ from matplotlib import pyplot
 
 
 PATH = os.path.dirname(__file__)
-SAVINGS_DIR = join(PATH,'../../savings')
+SAVINGS_DIR = join(PATH,'../savings')
 
 
 def preprocessing_func(X):
     return (X - np.mean(X)) / np.std(X)
 
 def train_model_from_dir(
-    train_path, valid_path, model, model_name='model', target_size=(224, 224), batch_size=16, epochs=500, 
+    base_path, train_path, valid_path, model, model_name='model', target_size=(224, 224), batch_size=16, epochs=500, 
     preprocessing_function=preprocessing_func, params=None
     ):
+
+    SAVINGS_DIR = '/'.join([base_path, 'savings'])
 
     # Naming and creating folder
     now = datetime.datetime.now()
@@ -46,7 +48,7 @@ def train_model_from_dir(
 
     tensorboard = TensorBoard(histogram_freq=0, write_graph=True, write_images=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.00001)
-    early_stop = EarlyStopping(monitor='val_loss', patience=50)
+    # early_stop = EarlyStopping(monitor='val_loss', patience=50)
     checkpoint = ModelCheckpoint(join(MODEL_DIR,'model.h5'), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     
     history = model.fit_generator(
@@ -55,7 +57,7 @@ def train_model_from_dir(
         validation_data=validation_generator,
         validation_steps=validation_generator.samples//batch_size, 
         epochs=epochs, 
-        callbacks=[tensorboard, reduce_lr, early_stop, checkpoint])
+        callbacks=[tensorboard, reduce_lr, checkpoint])
 
     pyplot.plot(history.history['acc'])
     pyplot.show()

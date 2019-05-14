@@ -6,9 +6,7 @@ from keras import models
 from keras import layers
 from keras.applications.vgg19 import VGG19
 
-
-
-def vgg(input_shape, num_classes):
+def vgg19(input_shape, num_classes):
 
     # convolutional layers
     vgg_conv = VGG19(weights='imagenet', include_top=False, input_shape=input_shape)
@@ -25,3 +23,4 @@ def vgg(input_shape, num_classes):
     model.add(layers.Dense(num_classes, activation='softmax'))
 
     return model
+    

@@ -6,9 +6,7 @@ from keras import models
 from keras import layers
 from keras.applications.vgg16 import VGG16
 
-
-
-def vgg(input_shape, num_classes):
+def vgg16(input_shape, num_classes):
 
     # convolutional layers
     vgg_conv = VGG16(weights='imagenet', include_top=False, input_shape=input_shape)
