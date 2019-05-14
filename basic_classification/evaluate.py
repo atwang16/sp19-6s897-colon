@@ -51,6 +51,6 @@ adam = optimizers.Adam(lr=0)
 model.compile(optimizer=adam, loss='sparse_categorical_crossentropy', metrics=['accuracy', auc])
 
 model.evaluate_generator(test_generator, 
-		steps_per_epoch=test_generator.samples//args.batch_size)
+		steps=test_generator.samples//args.batch_size)
 
 print(model.metrics_names)
