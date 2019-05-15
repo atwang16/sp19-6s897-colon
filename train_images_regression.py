@@ -85,12 +85,11 @@ if args.load_model is not None:
     model = load_model(args.load_model, custom_objects={'auc_metric': auc_metric})
 else:
     if args.type == 'vgg19':
-        model = vgg19.vgg(dataset.input_shape, args.num_classes)
+        model = vgg19.vgg(training_generator.input_shape, args.num_classes)
     elif args.type == 'resnet50':
-        model = resnet50.resnet(dataset.input_shape, args.num_classes)
+        model = resnet50.resnet(training_generator.input_shape, args.num_classes)
     elif args.type == 'pvgg19':
-        model = pvgg19.patch_vgg_regress(dataset.input_shape, args.num_classes)
-        import pdb; pdb.set_trace()
+        model = pvgg19.patch_vgg_regress(training_generator.input_shape, args.num_classes)
 
 model.summary()
 
