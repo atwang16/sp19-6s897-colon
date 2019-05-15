@@ -83,7 +83,7 @@ class Dataset:
         return np.array(patches), np.array(labels)
 
     def image_to_sequential_patches(self, original_image, ground_truth, new_shape = None):
-        threshold = 0.5
+        threshold = 0.25
         ground_truth_img = cv2.imread(ground_truth,0)
         ground_truth_img = self.normalize_vector(ground_truth_img)
 
@@ -1032,7 +1032,7 @@ class Generator_Dataset_Rotated(keras.utils.Sequence):
 
     def image_to_sequential_patches(self, original_image, ground_truth, new_shape = (224,224)):
 
-        threshold = 0.5
+        threshold = 0.25
         ground_truth_img = cv2.imread(ground_truth,0)
         ground_truth_img = self.normalize_vector(ground_truth_img)
 
