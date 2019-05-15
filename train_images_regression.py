@@ -21,6 +21,8 @@ import os
 import keras.losses
 import sklearn.utils as sk
 
+from keras import backend as K
+
 keras.losses.custom_loss = auc_metric
 
 # Loading arguments
