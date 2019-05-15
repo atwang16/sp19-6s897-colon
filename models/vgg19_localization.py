@@ -29,7 +29,7 @@ def vgg19(input_shape, pretrained_weights=None, use_sigmoid=False):
     # x = convs(x, num_filters=512, kernel_size=3, stride=1, num_layers=4)
     # x = convs(x, num_filters=512, kernel_size=3, stride=1, num_layers=4)
 
-    base_model = VGG19(weights='imagenet', include_top=False)
+    base_model = VGG19(weights='imagenet', include_top=False, input_shape=input_shape)
     inputs = base_model.inputs
     x = base_model.output
 
