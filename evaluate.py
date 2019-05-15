@@ -99,15 +99,15 @@ def get_dice_score(fmt):
         raise ValueError(f"Format {fmt} not supported.")
 
 
-def dice_score_center_loss(y_true, y_pred):
-    return 1 - get_dice_score(LocFormat.CENTER)(y_true, y_pred, is_tf_metric=True)
+def dice_score_box_loss(y_true, y_pred):
+    return 1 - get_dice_score(LocFormat.BOX)(y_true, y_pred, is_tf_metric=True)
 
 
 def mse_dice_loss(y_true, y_pred):
     mse = mean_squared_error(y_true, y_pred)
     # pred_area = (y_pred[:, 2] - y_pred[:, 0]) * (y_pred[:, 3] - y_pred[:, 1])
     # large_bb = K.mean(K.square(pred_area))
-    dice_loss = dice_score_center_loss(y_true, y_pred)
+    dice_loss = dice_score_box_loss(y_true, y_pred)
     return mse + 0.5 * dice_loss
 
 
