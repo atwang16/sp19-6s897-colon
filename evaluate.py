@@ -111,6 +111,14 @@ def mse_dice_loss(y_true, y_pred):
     return mse + 0.5 * dice_loss
 
 
+def mse_sqrt_loss(y_true, y_pred):
+    y_pred[:, 2:4] = K.square(y_pred[:, 2:4])
+    mse = mean_squared_error(y_true, y_pred)
+    # pred_area = (y_pred[:, 2] - y_pred[:, 0]) * (y_pred[:, 3] - y_pred[:, 1])
+    # large_bb = K.mean(K.square(pred_area))
+    return mse
+
+
 def evaluate(model, dataset, split, typ):
     X = dataset.__getattribute__(f"X_{split}")
     y = dataset.__getattribute__(f"y_{split}")

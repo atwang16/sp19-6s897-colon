@@ -41,7 +41,7 @@ def get_model(typ, input_shape, pretrained_weights):
         loss = "mean_squared_error"
     elif typ == 'resnet50':
         model = resnet.resnet50(input_shape, pretrained_weights=pretrained_weights, use_sigmoid=True)
-        loss = evaluate.mse_dice_loss
+        loss = evaluate.mse_sqrt_loss
     elif typ == "yolov3":
         model = yolo.yolov3(input_shape, pretrained_weights=pretrained_weights, freeze_body=2)
         loss = {'yolo_loss': lambda y_true, y_pred: y_pred}
