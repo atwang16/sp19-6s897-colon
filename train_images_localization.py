@@ -21,9 +21,9 @@ import time
 IMAGES_DIR = "data/segmentation"
 
 def get_localization_format(typ):
-    if typ in {"yolov3", "resnet50"}:
+    if typ in {"yolov3"}:
         return data.LocFormat.BOX
-    elif typ in {"vgg19"}:
+    elif typ in {"vgg19", "resnet50"}:
         return data.LocFormat.CENTER
     else:
         raise ValueError("Model type not supported.")

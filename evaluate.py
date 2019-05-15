@@ -23,9 +23,9 @@ INPUT_SHAPE = (224, 224)
 
 
 def get_localization_format(typ):
-    if typ in {"yolov3", "resnet50", "baseline"}:
+    if typ in {"yolov3", "baseline"}:
         return data.LocFormat.BOX
-    elif typ in {"vgg19"}:
+    elif typ in {"vgg19", "resnet50"}:
         return data.LocFormat.CENTER
     else:
         raise ValueError("Model type not supported.")
