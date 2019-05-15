@@ -153,6 +153,8 @@ def visualize(save_dir, dataset, predictions, num_to_generate=None):
 
     def get_bounding_box_center(box, color, linewidth=1):
         x_center, y_center, width, height = box
+        width *= width
+        height *= height
         if NORMALIZE_LABELS:
             x_center *= INPUT_SHAPE[0]
             width *= INPUT_SHAPE[0]
