@@ -111,7 +111,7 @@ if __name__ == '__main__':
     logging = TensorBoard(log_dir=args.output_dir)
     checkpoint_name = '%s_model.{epoch:03d}.h5' % args.type
     checkpoint = ModelCheckpoint(filepath=os.path.join(args.output_dir, checkpoint_name),
-                                 monitor='val_abs_error',
+                                 monitor='val_abs_error' if args.type == "yolov3" else "val_dice_score",
                                  verbose=1,
                                  save_best_only=True,
                                  save_weights_only=True,
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     if args.type == "yolov3":
         model.compile(optimizer=adam, loss=loss_function, metrics=[abs_error])
     else:
-        model.compile(optimizer=adam, loss=loss_function, metrics=[evaluate.rmse, evaluate.get_dice_score(localization_format), abs_error])
+        model.compile(optimizer=adam, loss=loss_function, metrics={"rmse": evaluate.rmse, "dice_score": evaluate.get_dice_score(localization_format), "abs_error": abs_error})
 
     print('\n=== Training Model ===\n')
 
@@ -151,10 +151,11 @@ if __name__ == '__main__':
             model.compile(optimizer=adam, loss=loss_function, metrics=[abs_error])
         else:
             model.compile(optimizer=adam, loss=loss_function,
-                          metrics=[evaluate.rmse, evaluate.get_dice_score(localization_format), abs_error])
+                          metrics={"rmse": evaluate.rmse, "dice_score": evaluate.get_dice_score(localization_format),
+                                   "abs_error": abs_error})
         # train model
         checkpoint = ModelCheckpoint(filepath=os.path.join(args.output_dir, checkpoint_name),
-                                     monitor='val_abs_error',
+                                     monitor='val_abs_error' if args.type == "yolov3" else "val_dice_score",
                                      verbose=1,
                                      save_best_only=True,
                                      save_weights_only=True,
