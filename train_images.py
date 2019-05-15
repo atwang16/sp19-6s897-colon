@@ -125,8 +125,8 @@ try:
         print('\n=== Training Model ===\n')
         # training the model
         # model.fit_generator(generator=training_generator,
-                            steps_per_epoch=len(training_generator), epochs=args.num_epochs,
-                            validation_data=valid_generator)#, callbacks=[mc])
+        #                     steps_per_epoch=len(training_generator), epochs=args.num_epochs,
+        #                     validation_data=valid_generator)#, callbacks=[mc])
         model.fit_generator(generator=training_generator,
                             steps_per_epoch=len(training_generator), epochs=args.num_epochs)
 
