@@ -79,10 +79,13 @@ def get_dice_score(fmt):
             st = tf.stack
         else:
             st = np.stack
+
+        width_height = K.square(y_pred[:, 2:4])
+
         y_true_box = st([y_true[:, 0] - y_true[:, 2] / 2, y_true[:, 1] - y_true[:, 3] / 2,
                                y_true[:, 0] + y_true[:, 2] / 2, y_true[:, 1] + y_true[:, 3] / 2], 1)
-        y_pred_box = st([y_pred[:, 0] - y_pred[:, 2] / 2, y_pred[:, 1] - y_pred[:, 3] / 2,
-                               y_pred[:, 0] + y_pred[:, 2] / 2, y_pred[:, 1] + y_pred[:, 3] / 2], 1)
+        y_pred_box = st([y_pred[:, 0] - width_height[:, 0] / 2, y_pred[:, 1] - width_height[:, 1] / 2,
+                               y_pred[:, 0] + width_height[:, 0] / 2, y_pred[:, 1] + width_height[:, 1] / 2], 1)
 
         return dice_score_box(y_true_box, y_pred_box, is_tf_metric=is_tf_metric)
 
