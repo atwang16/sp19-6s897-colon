@@ -115,7 +115,7 @@ if __name__ == '__main__':
                                  verbose=1,
                                  save_best_only=True,
                                  save_weights_only=True,
-                                 mode='min')
+                                 mode='min' if args.type == "yolov3" else 'max')
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1**0.5, patience=12, verbose=1)
     # early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
 
@@ -158,7 +158,7 @@ if __name__ == '__main__':
                                      verbose=1,
                                      save_best_only=True,
                                      save_weights_only=True,
-                                     mode='min')
+                                     mode='min' if args.type == "yolov3" else 'max')
         print("= Regular Training =")
         model.fit(dataset.X_train, dataset.y_train,
                   validation_data=(dataset.X_val, dataset.y_val),
