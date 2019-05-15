@@ -46,6 +46,7 @@ parser.add_argument('--lr', type=float, default=0.01, help='Learning rate to tra
 parser.add_argument('--loss', type=str, default='categorical_crossentropy', help='Loss function to train the model with (binary_crossentropy | categorical_crossentropy)')
 parser.add_argument('--num_classes', type=int, default=2, help='Number of classes to separate the data into')
 parser.add_argument('--patch_size', type=int, default=32, help='Number of pixels per side in the patch')
+parser.add_argument('--batch_size', type=int, default=1000, help='Number of batches')
 parser.add_argument('--num_patches', type=int, default=1, help='Number of patches generated per image')
 parser.add_argument('--resize_imgs', type=bool, default=True, help='Flag that will resize the images to (224,224) if True')
 parser.add_argument('--type', type=str, default='vgg19', help='Determines which convolutional model to use. Valid options are {vgg19|resnet50|pvgg19}')
