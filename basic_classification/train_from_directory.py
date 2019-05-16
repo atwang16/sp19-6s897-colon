@@ -48,7 +48,7 @@ def train_model_from_dir(
 
     tensorboard = TensorBoard(histogram_freq=0, write_graph=True, write_images=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.00001)
-    # early_stop = EarlyStopping(monitor='val_loss', patience=50)
+    early_stop = EarlyStopping(monitor='val_loss', patience=50)
     checkpoint = ModelCheckpoint(join(MODEL_DIR,'model.h5'), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     
     history = model.fit_generator(
@@ -79,7 +79,7 @@ def _presaving(model, model_dir, params):
         f.write(str(params))
 
 def _postsaving(model, history, model_dir):
-    model.save_weights(join(model_dir, 'my_model_weights.h5'))
+    model.save_weights(join(model_dir, 'final_model_weights.h5'))
     model.save(join(model_dir, 'final_model.h5'))
     with open(join(model_dir, 'history.pck'), 'wb') as f:
         pickle.dump(history.history, f)
@@ -87,3 +87,5 @@ def _postsaving(model, history, model_dir):
 
 
 
+
+# END FILE

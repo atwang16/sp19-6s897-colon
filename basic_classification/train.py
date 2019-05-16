@@ -18,6 +18,7 @@ from keras import backend as K
 import numpy as np
 
 # to run on gcp, use: CUDA_VISIBLE_DEVICES=0 ./docker_run.sh python3 /basic_classification/train.py (then arguments)
+# to run locally, run in the /basic_classification directory: python3 train.py --base_path . (then arguments)
 
 # Loading arguments
 parser = argparse.ArgumentParser(description='Polyp Detecting Model')
@@ -31,7 +32,7 @@ parser.add_argument('--train_path', type=str, default='data/kvasir_train_test_sp
 parser.add_argument('--valid_path', type=str, default='data/kvasir_train_test_split/val', help='folder that contains all validation images')
 
 # data parameters
-parser.add_argument('--validation_split', type=float, default=0.2, help='Percent of data to use for validation (rest will be used for training)')
+parser.add_argument('--data_aug', type=float, default=False, help='Boolean for data augmentation')
 
 # Model Hyper parameters
 parser.add_argument('--model_type', type=str, default='vgg19', help='Name of the preinitialized model to use out of { resnet50 | vgg19 | vgg16 }')
@@ -48,10 +49,6 @@ print('\n=== Setting up Parameters ===\n')
 args = parser.parse_args()
 args.train_path = '/'.join([args.base_path, args.train_path])
 args.valid_path = '/'.join([args.base_path, args.valid_path])
-
-# config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 56} )
-# sess = tf.Session(config=config)
-# keras.backend.set_session(sess)
 
 
 print('\n=== Initiating Model ===\n')
