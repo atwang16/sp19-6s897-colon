@@ -1,5 +1,5 @@
 # importing model file
-from models.vgg19 import vgg19
+from models.vgg19 import vgg19, vgg19_dropout
 from models.vgg16 import vgg16
 from models.resnet50 import resnet50
 
@@ -36,7 +36,7 @@ parser.add_argument('--data_aug', type=float, default=False, help='Boolean for d
 
 # Model Hyper parameters
 parser.add_argument('--model_type', type=str, default='vgg19', help='Name of the preinitialized model to use out of { resnet50 | vgg19 | vgg16 }')
-parser.add_argument('--num_epochs', type=int, default=80, help='Number of epochs to train the model')
+parser.add_argument('--num_epochs', type=int, default=500, help='Number of epochs to train the model')
 parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate to train the model')
 parser.add_argument('--loss', type=str, default='sparse_categorical_crossentropy', help='Loss function to train the model with (binary_crossentropy | categorical_crossentropy)')
 
@@ -60,6 +60,8 @@ elif args.model_type == 'resnet50':
 	model = resnet50((224, 224, 3), 2)
 elif args.model_type == 'vgg19':
 	model = vgg19((224, 224, 3), 2)
+elif args.model_type == 'vgg19_dropout':
+	model = vgg19_dropout((224, 224, 3), 2)
 elif args.model_type == 'vgg16':
 	model = vgg16((224, 224, 3), 2)
 
