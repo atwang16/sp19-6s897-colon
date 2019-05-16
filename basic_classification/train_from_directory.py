@@ -11,7 +11,6 @@ import pickle
 import numpy as np
 from matplotlib import pyplot
 
-
 PATH = os.path.dirname(__file__)
 SAVINGS_DIR = join(PATH,'../savings')
 
