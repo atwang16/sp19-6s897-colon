@@ -41,9 +41,9 @@ def train_model_from_dir(
     _presaving(model, MODEL_DIR, params)
 
     train_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
-    train_generator = train_datagen.flow_from_directory(train_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True)         
+    train_generator = train_datagen.flow_from_directory(train_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True, shear_range=0.2, horizontal_flip=True, vertical_flip=True, rotation_range=180)         
     valid_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
-    validation_generator = train_datagen.flow_from_directory(valid_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True)
+    validation_generator = train_datagen.flow_from_directory(valid_path, target_size=target_size, batch_size=batch_size, class_mode='binary', shuffle=True, shear_range=0.2, horizontal_flip=True, vertical_flip=True, rotation_range=180)
 
     tensorboard = TensorBoard(histogram_freq=0, write_graph=True, write_images=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.00001)
