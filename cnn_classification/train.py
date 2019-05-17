@@ -18,15 +18,15 @@ from keras import backend as K
 
 import numpy as np
 
-# to run on gcp, use: CUDA_VISIBLE_DEVICES=0 ./docker_run.sh python3 /basic_classification/train.py (then arguments)
-# to run locally, run in the /basic_classification directory: python3 train.py --base_path . (then arguments)
+# to run on gcp, use: CUDA_VISIBLE_DEVICES=0 ./docker_run.sh python3 /cnn_classification/train.py (then arguments)
+# to run locally, run in the /cnn_classification directory: python3 train.py --base_path . (then arguments)
 
 # Loading arguments
 parser = argparse.ArgumentParser(description='Polyp Detecting Model')
 
 # evaluation
 parser.add_argument('--only_test', type=bool, default=False, help='Flag such that, if true, the model will only be evaluated on the dataset passed in split by train_percent, validation_percent, etc')
-parser.add_argument('--base_path', default="/basic_classification")
+parser.add_argument('--base_path', default="/cnn_classification")
 
 # data location
 parser.add_argument('--train_path', type=str, default='data/kvasir_train_test_split/train', help='folder that contains all train images')

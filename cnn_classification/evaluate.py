@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description='Polyp Detecting Model')
 # Model hyperparameters
 parser.add_argument('--load_model', type=str, default='saved_models/resnet_runs/model.h5', help='Filepath of a model that will be loaded')
 
-parser.add_argument('--base_path', default="/basic_classification")
+parser.add_argument('--base_path', default="/cnn_classification")
 parser.add_argument('--test_path', type=str, default='data/kvasir_train_test_split/test', help='folder that contains all test images')
 
 
