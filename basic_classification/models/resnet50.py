@@ -19,3 +19,4 @@ def resnet50(input_shape, num_classes=2):
 # if __name__ == '__main__':
 #     model = resnet50((224, 224, 3), 2)
 #     model.summary()
+
