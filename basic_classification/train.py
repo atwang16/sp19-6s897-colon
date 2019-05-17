@@ -1,9 +1,6 @@
 # importing model file
-<<<<<<< HEAD
-from models.vgg19 import vgg19
-=======
+
 from models.vgg19 import vgg19, vgg19_dropout
->>>>>>> old-working-version
 from models.vgg16 import vgg16
 from models.resnet50 import resnet50
 
