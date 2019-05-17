@@ -77,10 +77,12 @@ def get_dice_score(fmt):
     def dice_score_center(y_true, y_pred, is_tf_metric=True):
         if is_tf_metric:
             st = tf.stack
+            sq = K.square
         else:
             st = np.stack
+            sq = np.square
 
-        width_height = K.square(y_pred[:, 2:4])
+        width_height = sq(y_pred[:, 2:4])
 
         y_true_box = st([y_true[:, 0] - y_true[:, 2] / 2, y_true[:, 1] - y_true[:, 3] / 2,
                                y_true[:, 0] + y_true[:, 2] / 2, y_true[:, 1] + y_true[:, 3] / 2], 1)
