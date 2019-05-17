@@ -5,3 +5,4 @@ basic_classification/__pycache__/
 tests/
 .DS_Store
 .idea/
+basic_classification/models/.DS_Store
