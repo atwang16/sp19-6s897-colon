@@ -57,6 +57,8 @@ for i in range(len(y_true)):
 	y = model.predict(test_x, batch_size=1)
 	y_pred.append(y[0][1])
 	y_pred_class.append(round(y[0][1]))
+	if round(y[0][1]) != y_true[i]:
+		print(i)
 	
 print("Predicted probabilities of containing polyp: ", y_pred)
 print("----")

@@ -43,7 +43,7 @@ if __name__ == '__main__':
 	prediction = model.predict(x)
 	print("Predicted", round(prediction[0][1]))
 	class_idx = np.argmax(prediction[0])
-	class_output = model.output[:, 1]
+	class_output = model.output[:, class_idx]
 	model.summary()
 	if args.model_type == 'vgg19':
 		last_conv_layer = model.get_layer("block5_conv4")
