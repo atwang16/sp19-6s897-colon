@@ -6,3 +6,4 @@ tests/
 .DS_Store
 .idea/
 results/
+basic_classification/models/.DS_Store

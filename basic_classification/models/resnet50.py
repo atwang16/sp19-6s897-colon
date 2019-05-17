@@ -7,14 +7,15 @@ from keras import layers
 from keras.applications.resnet50 import ResNet50
 
 def resnet50(input_shape, num_classes=2):
-    resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
 
-    model = models.Sequential()
-    model.add(resnet)
-    model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(1024, activation='relu'))
-    model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(num_classes, activation='softmax'))
+    model = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape, pooling='avg')
 
-    return model
+    x = layers.Dense(1024, activation='relu')(model.layers[-1].output)
+    output = layers.Dense(num_classes, activation='softmax')(x)
 
+    new_model = models.Model(input=model.input, output=output)
+    return new_model
+
+# if __name__ == '__main__':
+#     model = resnet50((224, 224, 3), 2)
+#     model.summary()

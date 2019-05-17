@@ -9,20 +9,18 @@ from keras.applications.vgg16 import VGG16
 def vgg16(input_shape, num_classes):
 
     # convolutional layers
-    vgg_conv = VGG16(weights='imagenet', include_top=False, input_shape=input_shape)
-
-    # for layer in vgg_conv.layers:
-    #   print(layer, layer.trainable)
+    model = VGG16(weights='imagenet', include_top=False, input_shape=input_shape)
 
     # fully connected layers
-    model = models.Sequential()
-    model.add(vgg_conv)
-    model.add(layers.Flatten())
-    model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(1560, activation='relu'))
-    model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(1560, activation='relu'))
-    model.add(layers.Dense(num_classes, activation='softmax'))
+    x = layers.Flatten()(model.layers[-1].output)
+    x = layers.Dense(1560, activation='relu', name='fc1')(x)
+    x = layers.Dense(1560, activation='relu', name='fc2')(x)
+    output = layers.Dense(num_classes, activation='softmax', name='output')(x)
 
-    return model
+    new_model = models.Model(input=model.input, outputs=output)
+    return new_model
 
+# if __name__ == '__main__':
+#     model = vgg16((224, 224, 3), 2)
+#     model.summary()
+#     pass
